@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Nouveau Résultat Disponible</title>
+</head>
+<body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 8px;">
+        <h2 style="color: #2563eb;">Vos résultats d'analyses sont prêts</h2>
+        <p>Bonjour {{ resultat.patient.user.first_name }},</p>
+        <p>Un nouveau document médical a été ajouté à votre dossier : <strong>{{ resultat.titre }}</strong>.</p>
+        
+        <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; font-size: 16px;">
+                Votre code d'accès confidentiel au document :
+                <br>
+                <strong style="font-size: 24px; letter-spacing: 2px; color: #1e40af;">{{ resultat.code_acces }}</strong>
+            </p>
+        </div>
+        
+        <p>Vous pouvez consulter votre résultat directement depuis l'application E-Santé Bénin dans la rubrique <strong>Mes Résultats</strong>.</p>
+        
+        <br>
+        <p>Cordialement,<br>Le laboratoire d'analyses médicales</p>
+    </div>
+</body>
+</html>

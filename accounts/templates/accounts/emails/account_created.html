@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f7fa; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .header { background-color: #20c997; padding: 30px; text-align: center; color: #ffffff; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+        .content { padding: 40px 30px; color: #333333; line-height: 1.6; }
+        .content h2 { font-size: 20px; color: #1a1a1a; margin-top: 0; }
+        .button-container { text-align: center; margin: 30px 0; }
+        .button { background-color: #20c997; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; }
+        .auth-box { background-color: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 20px; text-align: center; margin: 25px 0; }
+        .auth-box strong { font-size: 18px; color: #212529; letter-spacing: 1px; display: inline-block; margin-top: 10px; }
+        .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 13px; color: #6c757d; border-top: 1px solid #eeeeee; }
+        .link-text { color: #20c997; word-break: break-all; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>E-Santé Bénin</h1>
+        </div>
+        <div class="content">
+            <h2>Bienvenue Dr {{ user.last_name|default:user.first_name }},</h2>
+            <p>Un administrateur vient de créer votre compte professionnel sur la plateforme <strong>E-Santé Bénin</strong>.</p>
+            
+            {% if password %}
+                <p>Voici vos informations d'identification temporaires. Pour des raisons de sécurité, nous vous recommandons de modifier ce mot de passe dès votre première connexion.</p>
+                <div class="auth-box">
+                    <div>Identifiant : <strong>{{ user.email }}</strong></div>
+                    <div>Mot de passe : <strong>{{ password }}</strong></div>
+                </div>
+                <div class="button-container">
+                    <a href="{{ login_url }}" class="button">Me connecter</a>
+                </div>
+            {% elif setup_url %}
+                <p>Pour des raisons de sécurité, veuillez définir vous-même un mot de passe robuste en cliquant sur le bouton ci-dessous.</p>
+                <div class="button-container">
+                    <a href="{{ setup_url }}" class="button">Définir mon mot de passe</a>
+                </div>
+                <p style="margin-top: 15px; font-size: 13px; color: #777;">
+                    Lien de secours :<br>
+                    <a href="{{ setup_url }}" class="link-text">{{ setup_url }}</a>
+                </p>
+            {% endif %}
+            
+            <p>Si vous avez des questions, n'hésitez pas à contacter votre administrateur d'hôpital ou le support d'E-Santé Bénin.</p>
+        </div>
+        <div class="footer">
+            <p>&copy; {% now "Y" %} E-Santé Bénin. Tous droits réservés.</p>
+            <p>Ceci est un message automatique de création de profil sécurisé.</p>
+        </div>
+    </div>
+</body>
+</html>

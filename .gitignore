@@ -1,0 +1,72 @@
+# Environnement virtuel et fichiers sensibles
+env/
+.envrc
+.venv
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Bytecode Python
+__pycache__/
+*.py[codz]
+*$py.class
+*.so
+
+# Logs
+*.log
+test_stderr.log
+test_stdout.log
+
+# Médias uploadées (générées à l'exécution)
+media/
+
+# IMPORTANT : NE PAS ignorer les migrations Django !
+# Elles sont nécessaires pour que `python manage.py migrate` fonctionne sur Render.
+# migrations/   <-- NE PAS DÉCOMMENTER
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+MANIFEST
+wheels/
+
+# Django
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Fichiers statiques collectés (générés par collectstatic)
+staticfiles/
+
+# Tests
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+coverage.xml
+*.cover
+
+# PyCharm / VS Code / Cursor
+.idea/
+.cursorignore
+.cursorindexingignore
+
+# mypy / pytype / pyre
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pytype/
+.pyre/
+
+# Divers
+.cache
+.ruff_cache/
+.pypirc
+__pypackages__/
+cython_debug/
+
