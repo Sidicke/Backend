@@ -17,7 +17,7 @@ def search_doctors_rag(specialite=None, ville=None):
     if specialite:
         queryset = queryset.filter(medecin_services__service__nom__icontains=specialite)
     if ville:
-        queryset = queryset.filter(Q(user__ville__icontains=ville) | Q(user__hopital__ville__icontains=ville))
+        queryset = queryset.filter(Q(user__adresse__icontains=ville) | Q(user__hopital__ville__icontains=ville))
         
     medecins = queryset.distinct()[:5]  # Limiter à 5 pour ne pas surcharger le prompt
     
