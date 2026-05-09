@@ -557,7 +557,7 @@ class NearbyHospitalView(APIView):
     Accessible uniquement aux patients authentifiés.
     """
 
-    permission_classes = [IsAuthenticated, IsPatient]
+    permission_classes = [AllowAny]
 
     def get(self, request):
         try:

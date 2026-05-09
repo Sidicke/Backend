@@ -108,3 +108,24 @@ class Consultation(models.Model):
 
     def __str__(self):
         return f"Consultation du {self.date_consultation.strftime('%d/%m/%Y')} — {self.rendez_vous}"
+
+
+class PreEnregistrement(models.Model):
+    """Préenregistrement (Intake) soumis par le patient avant la date de la consultation."""
+
+    rendez_vous = models.OneToOneField(
+        RendezVous, on_delete=models.CASCADE, primary_key=True, related_name='pre_enregistrement'
+    )
+    symptomes_principaux = models.TextField('symptômes principaux')
+    debut_symptomes = models.DateField('début des symptômes', null=True, blank=True)
+    traitements_en_cours = models.TextField('traitements en cours', blank=True, default='')
+    observations = models.TextField('autres observations', blank=True, default='')
+    soumis_le = models.DateTimeField('soumis le', auto_now_add=True)
+    mis_a_jour_le = models.DateTimeField('mis à jour le', auto_now=True)
+
+    class Meta:
+        verbose_name = 'Préenregistrement'
+        verbose_name_plural = 'Préenregistrements'
+
+    def __str__(self):
+        return f"Préenregistrement — {self.rendez_vous}"

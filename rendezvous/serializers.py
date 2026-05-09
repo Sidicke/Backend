@@ -4,7 +4,19 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from accounts.models import Medecin, Patient
-from .models import Disponibilite, RendezVous, Consultation
+from .models import Disponibilite, RendezVous, Consultation, PreEnregistrement
+
+
+class PreEnregistrementSerializer(serializers.ModelSerializer):
+    """Serializer pour le formulaire de préenregistrement clinique du patient."""
+    class Meta:
+        model = PreEnregistrement
+        fields = [
+            'symptomes_principaux', 'debut_symptomes', 
+            'traitements_en_cours', 'observations', 
+            'soumis_le', 'mis_a_jour_le'
+        ]
+        read_only_fields = ['soumis_le', 'mis_a_jour_le']
 
 
 # ──────────────────────────────────────────────
@@ -110,6 +122,7 @@ class RendezVousSerializer(serializers.ModelSerializer):
     statut_display = serializers.CharField(source='get_statut_display', read_only=True)
     has_consultation = serializers.SerializerMethodField()
     consultation_id = serializers.SerializerMethodField()
+    pre_enregistrement = PreEnregistrementSerializer(read_only=True)
 
     class Meta:
         model = RendezVous
@@ -117,7 +130,7 @@ class RendezVousSerializer(serializers.ModelSerializer):
             'id', 'patient', 'patient_nom', 'medecin', 'medecin_nom',
             'medecin_specialite', 'date_heure', 'duree', 'motif', 'statut',
             'statut_display', 'commentaire_annulation', 'cree_le', 'modifie_le',
-            'has_consultation', 'consultation_id',
+            'has_consultation', 'consultation_id', 'pre_enregistrement',
         ]
         read_only_fields = [
             'id', 'patient', 'duree', 'statut',

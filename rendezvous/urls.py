@@ -18,6 +18,7 @@ urlpatterns = [
     path('rendezvous/<int:pk>/refuser/', views.RendezVousRefuserView.as_view(), name='rendezvous-refuser'),
     path('rendezvous/<int:pk>/annuler/', views.RendezVousAnnulerView.as_view(), name='rendezvous-annuler'),
     path('rendezvous/<int:pk>/terminer/', views.RendezVousTerminerView.as_view(), name='rendezvous-terminer'),
+    path('rendezvous/<int:pk>/preenregistrement/', views.PreEnregistrementView.as_view(), name='rendezvous-preenregistrement'),
 
     # Consultations
     path('consultations/', views.ConsultationListView.as_view(), name='consultation-list'),

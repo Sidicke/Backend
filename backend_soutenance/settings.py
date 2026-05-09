@@ -17,10 +17,10 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-dev-key-change-in-pro
 DEBUG = True
 
 # Hosts autorisés — inclut automatiquement le domaine Render si défini
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
-RENDER_EXTERNAL_HOSTNAME = config('RENDER_EXTERNAL_HOSTNAME', default='')
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+ALLOWED_HOSTS = ['localhost', '127.0.0.1','web-production-c678d.up.railway.app']
+RAILWAY_PUBLIC_DOMAIN = config('RAILWAY_PUBLIC_DOMAIN', default='')
+if RAILWAY_PUBLIC_DOMAIN:
+    ALLOWED_HOSTS.append(f"{RAILWAY_PUBLIC_DOMAIN}")
 
 # Applications installées
 INSTALLED_APPS = [
@@ -79,27 +79,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend_soutenance.wsgi.application'
 
-import dj_database_url
 
-DATABASE_URL = config('DATABASE_URL', default=None)
-
-if DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=DATABASE_URL,
-            conn_max_age=600,
-        )
-    }
-else:
-    # Base de données PostgreSQL locale
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'soutenance_data_base',
-            'USER': 'postgres',
-            'PASSWORD': config('DB_PASSWORD', default=''),
-            'HOST': 'localhost',
-            'PORT': '5432',
+DATABASES = {
+    'default': {
+       'ENGINE': 'django.db.backends.postgresql',
+       'NAME': 'defaultdb',
+        'USER': 'avnadmin',
+        'PASSWORD': config('DB_PASSWORD', default=''),
+        'HOST': 'pg-1ca3a3f1-sidickelpc123-2166.h.aivencloud.com',
+        'PORT': '12272',
         }
     }
 # Modèle utilisateur personnalisé
@@ -164,6 +152,7 @@ EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+# La configuration EMAIL_TIMEOUT a été retirée pour laisser le comportement natif robuste de Django
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@esante-benin.com')
 
 # URL du frontend
@@ -188,7 +177,7 @@ if _FRONTEND_CORS:
 
 # Configuration Chatbot (API externe)
 CHATBOT_API_URL = config('CHATBOT_API_URL', default='https://api.groq.com/openai/v1/chat/completions')
-CHATBOT_API_KEY = config('GROQ_API_KEY', default='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')
+CHATBOT_API_KEY = config('GROQ_API_KEY', default='')
 CHATBOT_MODEL = config('GROQ_MODEL', default='llama-3.3-70b-versatile')
 CHATBOT_TIMEOUT = config('CHATBOT_TIMEOUT', default=30, cast=int)
 

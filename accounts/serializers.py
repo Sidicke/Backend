@@ -46,6 +46,7 @@ class LaborantinProfileSerializer(serializers.ModelSerializer):
 class PatientRegisterSerializer(serializers.ModelSerializer):
     """Serializer pour l'inscription d'un patient."""
 
+    email = serializers.EmailField()
     password = serializers.CharField(write_only=True, validators=[validate_password])
     password_confirm = serializers.CharField(write_only=True)
     contact_urgence_nom = serializers.CharField(max_length=150, required=False, allow_blank=True)
@@ -60,6 +61,17 @@ class PatientRegisterSerializer(serializers.ModelSerializer):
             'date_naissance', 'sexe',
             'contact_urgence_nom', 'contact_urgence_tel',
         ]
+
+    def validate_email(self, value):
+        user = User.objects.filter(email=value).first()
+        if user:
+            if not user.is_active and not getattr(user, 'is_email_verified', False):
+                # Le compte a été créé lors d'une tentative interrompue (non vérifié)
+                # On le supprime pour permettre une nouvelle inscription propre
+                user.delete()
+            else:
+                raise serializers.ValidationError("Un utilisateur avec cet e-mail existe déjà.")
+        return value
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
@@ -92,8 +104,8 @@ class PatientRegisterSerializer(serializers.ModelSerializer):
             date_naissance=validated_data.get('date_naissance'),
             sexe=validated_data.get('sexe', 'M'),
             role='patient',
-            is_active=True,           # TODO: remettre à False quand on réactive la confirmation email
-            is_email_verified=True,   # TODO: remettre à False quand on réactive la confirmation email
+            is_active=False,
+            is_email_verified=False,
         )
 
         # Créer le profil patient

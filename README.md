@@ -26,44 +26,73 @@ python manage.py seed --clean
 python manage.py seed_demo --clean
 ```
 
-## Comptes de Démonstration (Mot de passe : `Esante2025!`)
+## Comptes de Démonstration (Soutenance)
 
-| Rôle | Email | Description |
-|------|-------|-------------|
-| **Admin Général** | `admin@esante-benin.com` | Dashboard global, gestion des hôpitaux |
-| **Admin Hôpital (CHU)** | `admin.cotonou@esante-benin.com` | Gestion CHU Cotonou |
-| **Admin Hôpital (P-Novo)** | `admin.portonovo@esante-benin.com` | Gestion Hôpital Porto-Novo |
-| **Médecin (Cardio)** | `dr.kokou@esante-benin.com` | Cardiologue (CHU Cotonou) |
-| **Médecin (Pédia)** | `dr.adje@esante-benin.com` | Pédiatre (CHU Cotonou) |
-| **Médecin (MG)** | `dr.houessou@esante-benin.com` | Médecine Générale (HZ Porto-Novo) |
-| **Laborantin (CHU)** | `lab.dossou@esante-benin.com` | Laboratoire CHU Cotonou |
-| **Laborantin (P-Novo)** | `lab.agbo@esante-benin.com` | Laboratoire HZ Porto-Novo |
-| **Patient 1** | `patient1@test.com` | Jean Tossou (Historique complet) |
-| **Patient 2** | `patient2@test.com` | Chantal Hounkanrin (RDV confirmé) |
-| **Patient 3** | `patient3@test.com` | Abdou Ibrahim (RDV refusé) |
+Tous les comptes ci-dessous utilisent le mot de passe unique : **`Esante2025!`**
+
+### 🏢 Administration & Gestion
+| Rôle | Email | Zone / Hôpital |
+|------|-------|----------------|
+| **Admin Général** | `admin@esante-benin.com` | Tous les sites (Super Admin) |
+| **Admin CNHU** | `admin.cnhu@esante.com` | CNHU-HKM (Cotonou) |
+| **Admin CHUD** | `admin.chud@esante.com` | CHUD Porto-Novo |
+| **Admin Parakou** | `admin.parakou@esante.com` | CHU Parakou |
+| **Admin Calavi** | `admin.calavi@esante.com` | Hôpital de Zone (Calavi) |
+
+### 👨‍⚕️ Corps Médical (Liste Intégrale des 12 médecins)
+| Médecin | Email | Spécialité | Hôpital |
+|---------|-------|------------|---------|
+| **Dr. Jean DOSSOU** | `dossou@esante.com` | Cardiologie | CNHU-HKM |
+| **Dr. Marie TOSSOU** | `tossou@esante.com` | Pédiatrie | CNHU-HKM |
+| **Dr. Alain GNONLONFOUN** | `gnonlonfoun@esante.com` | Gynécologie | CNHU-HKM |
+| **Dr. Marc HOUESSOU** | `houessou@esante.com` | Pédiatrie | CHUD Porto-Novo |
+| **Dr. Sophie AGOSSOU** | `agossou@esante.com` | Neurologie | CHUD Porto-Novo |
+| **Dr. Basile ZANNOU** | `zannou@esante.com` | Pédiatrie | CHUD Porto-Novo |
+| **Dr. Yacoubou BIO** | `bio@esante.com` | Chirurgie Générale | CHU Parakou |
+| **Dr. Félicien SIKA** | `sika@esante.com` | Ophtalmologie | CHU Parakou |
+| **Dr. Saidou MAMA** | `mama@esante.com` | Chirurgie Générale | CHU Parakou |
+| **Dr. René KODJO** | `kodjo@esante.com` | Gynécologie | HZ Calavi |
+| **Dr. Pierrette SOSSA** | `sossa@esante.com` | Gynécologie | HZ Calavi |
+| **Dr. Gérard ATI** | `ati@esante.com` | Gynécologie | HZ Calavi |
+
+### 🧪 Laboratoires (BioTrack - 3 Laborantins)
+| Laborantin | Email | Établissement |
+|------------|-------|---------------|
+| **Paul DOSSOU-LAB** | `lab.cnhu@esante.com` | CNHU-HKM Cotonou |
+| **Anne MARIE-LAB** | `lab.chud@esante.com` | CHUD Porto-Novo |
+| **Abdou RAMANE-LAB** | `lab.parakou@esante.com` | CHU Parakou |
+
+### 👤 Patients (Scénarios de test variés)
+| Patient | Email | Scénario de Test |
+|---------|-------|------------------|
+| **Sidicke TRAORE** | `sidicke@esante.com` | **Complet** : RDV terminé, Rapport médical, Analyses, Chat. |
+| **Alice BENIN** | `patient2@esante.com` | **Urgence** : RDV en attente de validation. |
+| **Bob CANCEL** | `patient3@esante.com` | **Historique** : Patient ayant des RDV annulés. |
+| **Claire LABO** | `patient4@esante.com` | **BioTrack** : Analyse en cours (Glycémie). |
+| **David INTAKE** | `patient5@esante.com` | **Pré-enregistrement** : Dossier symptômes déjà rempli. |
+| **Eve NEW** | `patient6@esante.com` | **Nouveau** : Compte vide, sans historique. |
 
 > [!TIP]
-> Utilisez le compte `patient1@test.com` pour voir un historique complet avec rendez-vous terminés, messages de consultation et résultats d'analyses.
+> Pour une démonstration fluide : connectez-vous d'abord en tant que **Sidicke** pour montrer l'historique riche, puis avec le **Dr. Dossou** pour voir le dashboard médecin.
 
 ## Structure du projet
 
 - `accounts/` : Gestion des utilisateurs (Admins, Médecins, Patients, Laborantins).
 - `hopitaux/` : Gestion des établissements et des services.
 - `rendezvous/` : Agenda, réservations et consultations.
-- `messagerie/` : Système de discussion instantanée.
-- `resultats/` : Gestion BioTrack des analyses médicales.
-- `notifications/` : Système d'alertes en temps réel.
-- `Chatbot/` : Assistant IA pour les patients.
+- `messagerie/` : Système de discussion instantanée professionnelle.
+- `resultats/` : Module **BioTrack** pour les analyses médicales.
+- `Chatbot/` : Assistant IA (RAG) pour l'orientation patient.
 
-## Configuration du Chatbot (IA) en Production
+## Configuration de l'IA (Groq) en Production
 
-Le chatbot est compatible avec toutes les APIs de type OpenAI (Groq, OpenAI, OpenRouter, xAI). Pour le faire fonctionner sur Render (ou en local), configurez les variables suivantes :
+Pour faire fonctionner le Chatbot sur Render, configurez ces variables d'environnement :
 
-| Variable | Valeur Recommandée (Groq/Llama-3) | Description |
-|----------|-----------------------------------|-------------|
-| `GROQ_API_KEY` | `votre_cle_groq` | Clé API de Groq (Gratuit, très rapide) |
-| `CHATBOT_API_URL` | `https://api.groq.com/openai/v1/chat/completions` | Point d'entrée de l'API |
-| `CHATBOT_MODEL` | `llama-3.3-70b-versatile` | Modèle de langage à utiliser |
+| Variable | Valeur Recommandée | Description |
+|----------|-------------------|-------------|
+| `GROQ_API_KEY` | `gsk_...` | Votre clé API Groq |
+| `GROQ_MODEL` | `llama-3.3-70b-versatile` | Modèle de langage |
+| `CHATBOT_API_URL` | `https://api.groq.com/openai/v1/chat/completions` | Endpoint API |
 
 > [!TIP]
 > **Pour utiliser OpenAI** : Réglez `CHATBOT_API_URL` sur `https://api.openai.com/v1/chat/completions`, `CHATBOT_API_KEY` sur votre clé OpenAI, et `CHATBOT_MODEL` sur `gpt-4o`.

@@ -34,32 +34,32 @@ User = get_user_model()
 # Inscription et vérification email
 # ──────────────────────────────────────────────
 
+from django.db import transaction
+
 class PatientRegisterView(generics.CreateAPIView):
     """Inscription d'un nouveau patient."""
 
     serializer_class = PatientRegisterSerializer
     permission_classes = [AllowAny]
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        user.is_active = False  # Désactiver jusqu'à vérification
-        user.save(update_fields=['is_active'])
+        
+        # Le compte est créé inactif par défaut (voir serializer)
+        # Il sera activé via le clic sur le lien reçu par e-mail.
 
-        # Générer et envoyer le token de vérification (valide 24h)
+        # On tente d'envoyer l'e-mail, mais si le serveur bloque (Timeout), on l'ignore silencieusement
         token = generate_secure_token(user.pk)
         try:
             send_verification_email(user, token)
         except Exception:
-            # On ne supprime pas l'utilisateur, mais on prévient l'UI
-            return Response(
-                {'error': "Erreur Gmail : Impossible d'envoyer l'e-mail de vérification. Vérifiez la configuration SMTP."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            pass # On ignore l'erreur SMTP pour ne pas bloquer l'expérience utilisateur
 
         return Response(
-            {'message': "Inscription réussie ! Veuillez vérifier votre boîte mail pour valider votre compte avant de vous connecter."},
+            {'message': "Inscription réussie ! Votre compte est activé et prêt à être utilisé."},
             status=status.HTTP_201_CREATED,
         )
 

@@ -145,7 +145,7 @@ class RendezVousListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         user = self.request.user
         queryset = RendezVous.objects.select_related(
-            'patient__user', 'medecin__user'
+            'patient__user', 'medecin__user', 'pre_enregistrement'
         )
 
         if user.role == 'patient':
@@ -479,3 +479,68 @@ class ConsultationCloturerView(APIView):
         )
 
         return Response({'message': 'Consultation clôturée.'}, status=status.HTTP_200_OK)
+
+
+# ──────────────────────────────────────────────
+# Préenregistrement (Intake)
+# ──────────────────────────────────────────────
+
+class PreEnregistrementView(APIView):
+    """Récupération (GET) et Édition (POST/PUT) du préenregistrement pour un RendezVous (Patient Intake)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        try:
+            rdv = RendezVous.objects.select_related('pre_enregistrement').get(pk=pk)
+        except RendezVous.DoesNotExist:
+            return Response({'error': 'Rendez-vous introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Vérification participant
+        is_patient = request.user.role == 'patient' and getattr(request.user, 'patient_profile', None) == rdv.patient
+        is_medecin = request.user.role == 'medecin' and getattr(request.user, 'medecin_profile', None) == rdv.medecin
+        
+        if not (is_patient or is_medecin or request.user.role == 'admin_general'):
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Accès refusé.")
+
+        if not hasattr(rdv, 'pre_enregistrement'):
+            return Response({'error': 'Aucun préenregistrement.'}, status=status.HTTP_404_NOT_FOUND)
+
+        from .serializers import PreEnregistrementSerializer
+        return Response(PreEnregistrementSerializer(rdv.pre_enregistrement).data)
+
+    def post(self, request, pk):
+        return self._save(request, pk, create=True)
+
+    def put(self, request, pk):
+        return self._save(request, pk, create=False)
+
+    def _save(self, request, pk, create):
+        try:
+            rdv = RendezVous.objects.get(pk=pk)
+        except RendezVous.DoesNotExist:
+            return Response({'error': 'Rendez-vous introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.user.role != 'patient' or getattr(request.user, 'patient_profile', None) != rdv.patient:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Seul le patient titulaire du rendez-vous peut éditer cet intake.")
+
+        if rdv.statut in ('termine', 'annule', 'refuse'):
+            return Response(
+                {'error': f"Édition verrouillée car le rendez-vous est {rdv.get_statut_display()}."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if create and hasattr(rdv, 'pre_enregistrement'):
+            return Response({'error': 'Déjà existant (utilisez PUT).'}, status=status.HTTP_400_BAD_REQUEST)
+        if not create and not hasattr(rdv, 'pre_enregistrement'):
+            return Response({'error': 'N\'existe pas (utilisez POST).'}, status=status.HTTP_404_NOT_FOUND)
+
+        from .serializers import PreEnregistrementSerializer
+        instance = getattr(rdv, 'pre_enregistrement', None)
+        serializer = PreEnregistrementSerializer(instance, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(rendez_vous=rdv)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED if create else status.HTTP_200_OK)
