@@ -80,16 +80,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'backend_soutenance.wsgi.application'
 
 
+import dj_database_url
+
 DATABASES = {
-    'default': {
-       'ENGINE': 'django.db.backends.postgresql',
-       'NAME': 'defaultdb',
-        'USER': 'avnadmin',
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': 'pg-1ca3a3f1-sidickelpc123-2166.h.aivencloud.com',
-        'PORT': '12272',
-        }
-    }
+    'default': dj_database_url.config(
+        default=config('DATABASE_URL', default='sqlite:///db.sqlite3'),
+        conn_max_age=600,
+        conn_health_checks=True,
+    )
+}
 # Modèle utilisateur personnalisé
 AUTH_USER_MODEL = 'accounts.User'
 
