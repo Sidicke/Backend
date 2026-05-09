@@ -17,7 +17,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-dev-key-change-in-pro
 DEBUG = True
 
 # Hosts autorisés — inclut automatiquement le domaine Render si défini
-ALLOWED_HOSTS = ['localhost', '127.0.0.1','web-production-c678d.up.railway.app']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backend-production-fc8f.up.railway.app']
 RAILWAY_PUBLIC_DOMAIN = config('RAILWAY_PUBLIC_DOMAIN', default='')
 if RAILWAY_PUBLIC_DOMAIN:
     ALLOWED_HOSTS.append(f"{RAILWAY_PUBLIC_DOMAIN}")
