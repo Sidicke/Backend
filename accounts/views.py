@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.http import HttpResponse
 from django.utils.crypto import get_random_string
-from rest_framework import generics, status, filters
+from rest_framework import generics, status, filters, serializers
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -51,15 +51,19 @@ class PatientRegisterView(generics.CreateAPIView):
         # Le compte est créé inactif par défaut (voir serializer)
         # Il sera activé via le clic sur le lien reçu par e-mail.
 
-        # On tente d'envoyer l'e-mail, mais si le serveur bloque (Timeout), on l'ignore silencieusement
+        # On tente d'envoyer l'e-mail. Si ça échoue, on annule tout pour ne pas laisser de compte "mort".
         token = generate_secure_token(user.pk)
         try:
             send_verification_email(user, token)
-        except Exception:
-            pass # On ignore l'erreur SMTP pour ne pas bloquer l'expérience utilisateur
+        except Exception as e:
+            # On lève une erreur pour déclencher le rollback de transaction.atomic
+            raise serializers.ValidationError({
+                "email": f"Échec de l'envoi de l'email de confirmation : {str(e)}. "
+                         "Vérifiez vos paramètres de messagerie sur Railway."
+            })
 
         return Response(
-            {'message': "Inscription réussie ! Votre compte est activé et prêt à être utilisé."},
+            {'message': "Inscription réussie ! Un email de confirmation a été envoyé à votre adresse. Veuillez vérifier votre boîte mail pour activer votre compte."},
             status=status.HTTP_201_CREATED,
         )
 
