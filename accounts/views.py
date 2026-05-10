@@ -71,7 +71,7 @@ class PatientRegisterView(generics.CreateAPIView):
         # --- OPTIONNEL : Notification WhatsApp avec le CODE ---
         whatsapp_sent = False
         try:
-            phone = getattr(user, 'phone', None) or request.data.get('phone')
+            phone = getattr(user, 'telephone', None) or request.data.get('telephone')
             if phone:
                 clean_phone = "".join(filter(str.isdigit, str(phone)))
                 welcome_msg = (
