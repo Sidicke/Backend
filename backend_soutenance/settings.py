@@ -143,8 +143,15 @@ SIMPLE_JWT = {
 
 # Configuration Email
 # En développement : les emails s'affichent dans la console (terminal)
-# En production : changer pour 'django.core.mail.backends.smtp.EmailBackend'
-# On force le SMTP même en développement pour que vous receviez les vrais e-mails
+# ── Email configuration ──────────────────────────────────────────────────
+import socket
+# Forcer l'utilisation de l'IPv4 pour éviter "Errno 101: Network is unreachable"
+# (Problème de routage IPv6 fréquent sur Railway/Gmail)
+orig_getaddrinfo = socket.getaddrinfo
+def getaddrinfo_ipv4(*args, **kwargs):
+    return [r for r in orig_getaddrinfo(*args, **kwargs) if r[0] == socket.AF_INET]
+socket.getaddrinfo = getaddrinfo_ipv4
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
