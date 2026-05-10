@@ -4,14 +4,6 @@ Django settings for backend_soutenance project.
 
 import os
 from datetime import timedelta
-import socket
-# Forcer l'utilisation de l'IPv4 pour éviter "Errno 101: Network is unreachable"
-# (Problème de routage IPv6 fréquent sur Railway/Gmail)
-orig_getaddrinfo = socket.getaddrinfo
-def getaddrinfo_ipv4(*args, **kwargs):
-    return [r for r in orig_getaddrinfo(*args, **kwargs) if r[0] == socket.AF_INET]
-socket.getaddrinfo = getaddrinfo_ipv4
-
 from pathlib import Path
 
 from decouple import config
@@ -152,14 +144,13 @@ SIMPLE_JWT = {
 # Configuration Email
 # ── Email configuration ──────────────────────────────────────────────────
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
-EMAIL_PORT = config('EMAIL_PORT', default=465, cast=int)
+EMAIL_HOST = config('EMAIL_HOST', default='smtp-relay.brevo.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=False, cast=bool)
-EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=True, cast=bool)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
-# La configuration EMAIL_TIMEOUT a été retirée pour laisser le comportement natif robuste de Django
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@esante-benin.com')
 
 # URL du frontend
