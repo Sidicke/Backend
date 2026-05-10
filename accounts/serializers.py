@@ -65,9 +65,9 @@ class PatientRegisterSerializer(serializers.ModelSerializer):
     def validate_email(self, value):
         user = User.objects.filter(email=value).first()
         if user:
-            # Si l'utilisateur est inactif ET n'a pas encore validé son email, 
-            # on considère que sa précédente inscription a échoué. On nettoie pour recommencer.
-            if not user.is_active and not user.is_email_verified:
+            # Si l'utilisateur est inactif, on considère que son inscription est incomplète ou à refaire.
+            # On le supprime pour permettre une nouvelle inscription propre.
+            if not user.is_active:
                 user.delete()
             else:
                 raise serializers.ValidationError("Un utilisateur avec cet e-mail existe déjà.")
