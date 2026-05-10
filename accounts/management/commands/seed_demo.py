@@ -68,7 +68,9 @@ class Command(BaseCommand):
                 'sidicke@HOPITEL.com', 'patient2@HOPITEL.com', 'patient3@HOPITEL.com',
                 'patient4@HOPITEL.com', 'patient5@HOPITEL.com', 'patient6@HOPITEL.com',
             ]
-            User.objects.filter(email__in=demo_emails).delete()
+            # Suppression insensible à la casse pour éviter les conflits
+            for email in demo_emails:
+                User.objects.filter(email__iexact=email).delete()
             
             # Nettoyage des médecins/patients qui auraient pu être créés avec ces emails mais pas encore liés
             # (Déjà géré par CASCADE si OneToOneField, mais plus sûr ici)
@@ -206,8 +208,8 @@ class Command(BaseCommand):
         now = timezone.now()
         
         # Sidicke : RDV terminé + Consultation + Chat
-        sidicke_prof = Patient.objects.get(user=p_sidicke)
-        dr_dossou = Medecin.objects.get(user__email='dossou@HOPITEL.com')
+        sidicke_prof = Patient.objects.get(user__email__iexact='sidicke@HOPITEL.com')
+        dr_dossou = Medecin.objects.get(user__email__iexact='dossou@HOPITEL.com')
         
         rdv_sid, _ = RendezVous.objects.get_or_create(
             patient=sidicke_prof, 
@@ -229,7 +231,7 @@ class Command(BaseCommand):
         )
 
         # Alice : RDV en attente
-        alice_prof = Patient.objects.get(user=p_alice)
+        alice_prof = Patient.objects.get(user__email__iexact='patient2@HOPITEL.com')
         RendezVous.objects.get_or_create(
             patient=alice_prof, medecin=dr_dossou, 
             date_heure__date=(now + timedelta(days=1)).date(),
@@ -237,7 +239,7 @@ class Command(BaseCommand):
         )
 
         # David : Pré-enregistrement
-        david_p = Patient.objects.get(user=p_david)
+        david_p = Patient.objects.get(user__email__iexact='patient5@HOPITEL.com')
         rdv_dav, _ = RendezVous.objects.get_or_create(
             patient=david_p, medecin=dr_dossou, 
             date_heure__date=(now + timedelta(days=3)).date(),
@@ -249,7 +251,7 @@ class Command(BaseCommand):
         )
 
         # Claire : Analyse en cours
-        claire_prof = Patient.objects.get(user=p_claire)
+        claire_prof = Patient.objects.get(user__email__iexact='patient4@HOPITEL.com')
         Resultat.objects.get_or_create(
             patient=claire_prof, titre='Glycémie', date_analyse=date.today(),
             defaults={'laboratoire': 'CNHU Cotonou'}
@@ -273,8 +275,8 @@ class Command(BaseCommand):
         return s
 
     def _user(self, email, first_name, last_name, role, telephone, date_naissance, sexe, hopital=None, is_staff=False, is_superuser=False):
-        if User.objects.filter(email=email).exists():
-            return User.objects.get(email=email)
+        if User.objects.filter(email__iexact=email).exists():
+            return User.objects.get(email__iexact=email)
         user = User.objects.create_user(
             email=email, password=PASSWORD,
             first_name=first_name, last_name=last_name,
