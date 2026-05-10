@@ -153,6 +153,9 @@ class Command(BaseCommand):
                     m.save()
                 MedecinService.objects.get_or_create(medecin=m, service=svc)
                 
+                # Ajout de disponibilités par défaut (Lundi-Vendredi, 8h-12h, 14h-18h)
+                self._seed_availabilities(m)
+                
                 if hop.id not in hopital_service_requirements:
                     hopital_service_requirements[hop.id] = set()
                 hopital_service_requirements[hop.id].add(svc.id)
@@ -282,6 +285,22 @@ class Command(BaseCommand):
         )
         self.stdout.write(f'  [ok]   {email} ({role})')
         return user
+
+    def _seed_availabilities(self, medecin):
+        """Crée des disponibilités récurrentes (Lun-Ven) pour un médecin."""
+        for jour in range(1, 6): # Lundi à Vendredi
+            # Matin : 08:00 - 12:00
+            Disponibilite.objects.get_or_create(
+                medecin=medecin, jour_semaine=jour, type='recurrent',
+                heure_debut=time(8, 0), heure_fin=time(12, 0),
+                defaults={'is_active': True}
+            )
+            # Après-midi : 14:00 - 18:00
+            Disponibilite.objects.get_or_create(
+                medecin=medecin, jour_semaine=jour, type='recurrent',
+                heure_debut=time(14, 0), heure_fin=time(18, 0),
+                defaults={'is_active': True}
+            )
 
     def _sep(self):
         self.stdout.write('[DEMO] ' + '-' * 60)
