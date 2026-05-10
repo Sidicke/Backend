@@ -38,6 +38,7 @@ class User(AbstractUser):
     adresse = models.TextField('adresse', blank=True, default='')
     photo = models.ImageField('photo de profil', upload_to='photos_profil/', blank=True, null=True)
     is_email_verified = models.BooleanField('email vérifié', default=False)
+    activation_code = models.CharField('code d\'activation', max_length=6, blank=True, default='')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'telephone', 'sexe']

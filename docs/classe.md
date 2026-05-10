@@ -1,9 +1,9 @@
-# Diagramme de Classes — E-Santé Bénin
+# Diagramme de Classes — HOPITEL
 
 > Copiez le bloc PlantUML ci-dessous dans [PlantText](https://www.planttext.com/) ou tout éditeur PlantUML pour générer le diagramme.
 
 ```plantuml
-@startuml Diagramme_Classes_ESante_Benin
+@startuml Diagramme_Classes_HOPITEL_Benin
 
 skinparam classAttributeIconSize 0
 skinparam shadowing false

@@ -240,7 +240,7 @@ class RendezVousCreateSerializer(serializers.Serializer):
             medecin_tel = rdv.medecin.user.telephone
             if medecin_tel:
                 msg = (
-                    f"E-SANTE: Nouveau RDV avec {rdv.patient.user.get_full_name()} "
+                    f"HOPITEL: Nouveau RDV avec {rdv.patient.user.get_full_name()} "
                     f"le {rdv.date_heure.strftime('%d/%m/%Y à %H:%M')}."
                 )
                 send_twilio_sms(medecin_tel, msg)

@@ -1,4 +1,4 @@
-# Diagrammes de Séquence — E-Santé Bénin
+# Diagrammes de Séquence — HOPITEL
 
 > Copiez chaque bloc PlantUML ci-dessous dans [PlantText](https://www.planttext.com/) ou tout éditeur PlantUML pour générer les diagrammes.
 

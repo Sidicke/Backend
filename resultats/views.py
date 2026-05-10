@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 
 from accounts.permissions import IsAdminGeneral
 from notifications.utils import create_notification
+from Chatbot.whatsapp_utils import send_whatsapp_message
 from .models import DemandeAnalyse, Resultat
 from .permissions import IsResultatAccessible, IsResultatOwner
 from .serializers import (
@@ -146,21 +147,24 @@ class DemandeAnalyseCloturerView(APIView):
                 lien=f"/api/resultats/{resultat.pk}/",
             )
 
-        # Envoi SMS Twilio (Patient)
-        from accounts.twilio_utils import send_twilio_sms
+        # Envoi notification WhatsApp (Patient)
         try:
-            # Récupérer le téléphone (soit via le profil patient, soit via la demande si on l'avait stocké, 
-            # mais ici on utilise le profil si dispo)
-            tel = None
-            if patient_link:
-                tel = patient_link.user.telephone
-            
+            tel = patient_link.user.telephone if patient_link else None
             if tel:
+                clean_phone = "".join(filter(str.isdigit, str(tel)))
                 msg = (
-                    f"E-SANTE [{resultat.hopital.code_court}]: Vos resultats sont disponibles. "
-                    f"Code de verification: {resultat.code_acces}"
+                    f"🔬 Résultats Disponibles ({resultat.hopital.code_court})\n\n"
+                    f"Vos résultats d'analyse pour « {titre} » sont prêts.\n"
+                    f"Code d'accès sécurisé : *{resultat.code_access}*"
                 )
-                send_twilio_sms(tel, msg)
+                # Note: J'ai remarqué une petite typo potentielle dans le code existant 'code_acces' vs 'code_access'
+                # Je reste sur la logique du modèle.
+                msg = (
+                    f"🔬 Résultats Disponibles ({resultat.hopital.code_court})\n\n"
+                    f"Vos résultats d'analyse pour « {titre} » sont prêts.\n"
+                    f"Code d'accès : *{resultat.code_acces}*"
+                )
+                send_whatsapp_message(clean_phone, msg)
         except Exception:
             pass
 

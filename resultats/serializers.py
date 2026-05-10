@@ -263,7 +263,7 @@ class ResultatCreateSerializer(serializers.ModelSerializer):
             f"Rendez-vous sur la plateforme pour les consulter.\n"
         )
         send_mail(
-            subject="Vos résultats d'analyse - E-Santé Bénin",
+            subject="Vos résultats d'analyse - HOPITEL",
             message=message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[patient_email],

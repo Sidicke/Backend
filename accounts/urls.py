@@ -7,7 +7,7 @@ app_name = 'accounts'
 urlpatterns = [
     # Inscription et vérification email
     path('register/', views.PatientRegisterView.as_view(), name='register'),
-    path('verify-email/<str:token>/', views.VerifyEmailView.as_view(), name='verify-email'),
+    path('activate-code/', views.ActivateByCodeView.as_view(), name='activate-code'),
     path('request-password-reset/', views.RequestPasswordResetView.as_view(), name='request-password-reset'),
     path('reset-password-confirm/', views.ResetPasswordConfirmView.as_view(), name='reset-password-confirm'),
     path('reset-password/<str:token>/', views.PasswordResetHTMLView.as_view(), name='password-reset-html'),

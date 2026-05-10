@@ -60,7 +60,7 @@ class Migration(migrations.Migration):
                 ('date_cloture', models.DateTimeField(blank=True, null=True, verbose_name='date de clôture')),
                 ('hopital', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='demandes_analyse', to='hopitaux.hopital', verbose_name='hôpital')),
                 ('laborantin', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='demandes_inscrites', to=settings.AUTH_USER_MODEL, verbose_name='laborantin')),
-                ('patient', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='demandes_analyse', to='accounts.patient', verbose_name='patient (compte E-Santé)')),
+                ('patient', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='demandes_analyse', to='accounts.patient', verbose_name='patient (compte HOPITEL)')),
                 ('resultat', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='demande', to='resultats.resultat', verbose_name='résultat associé')),
             ],
             options={

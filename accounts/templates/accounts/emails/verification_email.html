@@ -10,34 +10,28 @@
         .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
         .content { padding: 40px 30px; color: #333333; line-height: 1.6; }
         .content h2 { font-size: 20px; color: #1a1a1a; margin-top: 0; }
-        .button-container { text-align: center; margin: 30px 0; }
-        .button { background-color: #0d6efd; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; }
+        .otp-container { text-align: center; margin: 30px 0; background-color: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px dashed #0d6efd; }
+        .otp-code { font-size: 32px; font-weight: bold; color: #0d6efd; letter-spacing: 5px; }
         .footer { background-color: #f8f9fa; padding: 20px; text-align: center; font-size: 13px; color: #6c757d; border-top: 1px solid #eeeeee; }
-        .link-text { color: #0d6efd; word-break: break-all; font-size: 13px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>E-Santé Bénin</h1>
+            <h1>HOPITEL</h1>
         </div>
         <div class="content">
             <h2>Bonjour {{ user.first_name }},</h2>
-            <p>Merci de vous être inscrit sur <strong>E-Santé Bénin</strong>. Pour finaliser la création de votre compte en toute sécurité, veuillez confirmer votre adresse e-mail en cliquant sur le bouton ci-dessous.</p>
+            <p>Merci de vous être inscrit sur <strong>HOPITEL</strong>. Pour finaliser la création de votre compte, veuillez saisir le code de vérification suivant dans l'application :</p>
             
-            <div class="button-container">
-                <a href="{{ verification_url }}" class="button">Activer mon compte</a>
+            <div class="otp-container">
+                <div class="otp-code">{{ otp_code }}</div>
             </div>
             
-            <p>Ce lien est sécurisé et expirera dans 24 heures. Si vous n'êtes pas à l'origine de cette inscription, veuillez ignorer ce message.</p>
-            
-            <p style="margin-top: 30px; font-size: 13px; color: #777;">
-                Si le bouton ne fonctionne pas, copiez-collez ce lien dans votre navigateur :<br>
-                <a href="{{ verification_url }}" class="link-text">{{ verification_url }}</a>
-            </p>
+            <p>Ce code est strictement personnel et expirera prochainement. Si vous n'êtes pas à l'origine de cette inscription, veuillez ignorer ce message.</p>
         </div>
         <div class="footer">
-            <p>&copy; {% now "Y" %} E-Santé Bénin. Tous droits réservés.</p>
+            <p>&copy; {% now "Y" %} HOPITEL. Tous droits réservés.</p>
             <p>Ceci est un message automatique, merci de ne pas y répondre.</p>
         </div>
     </div>

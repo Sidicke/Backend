@@ -9,7 +9,7 @@ from notifications.utils import create_notification
 
 User = get_user_model()
 
-PASSWORD = 'Esante2025!'
+PASSWORD = 'HOPITEL2025!'
 
 
 class Command(BaseCommand):
@@ -65,7 +65,7 @@ class Command(BaseCommand):
 
         # ── Admin Général (superuser) ──
         admin_general = self._create_user(
-            email='admin@esante-benin.com',
+            email='admin@HOPITEL-benin.com',
             password=PASSWORD,
             first_name='Administrateur',
             last_name='Général',
@@ -79,7 +79,7 @@ class Command(BaseCommand):
 
         # ── Admin Hôpital CHU Cotonou ──
         admin_h1 = self._create_user(
-            email='admin.cotonou@esante-benin.com',
+            email='admin.cotonou@HOPITEL-benin.com',
             password=PASSWORD,
             first_name='Rachid',
             last_name='Ahouansou',
@@ -92,7 +92,7 @@ class Command(BaseCommand):
 
         # ── Admin Hôpital Porto-Novo ──
         admin_h2 = self._create_user(
-            email='admin.portonovo@esante-benin.com',
+            email='admin.portonovo@HOPITEL-benin.com',
             password=PASSWORD,
             first_name='Amina',
             last_name='Soulé',
@@ -105,7 +105,7 @@ class Command(BaseCommand):
 
         # ── Médecins ──
         med1 = self._create_user(
-            email='dr.kokou@esante-benin.com',
+            email='dr.kokou@HOPITEL-benin.com',
             password=PASSWORD,
             first_name='Kokou',
             last_name='Mensah',
@@ -123,7 +123,7 @@ class Command(BaseCommand):
             MedecinService.objects.get_or_create(medecin=m1, service=services[0])  # Cardiologie
 
         med2 = self._create_user(
-            email='dr.adje@esante-benin.com',
+            email='dr.adje@HOPITEL-benin.com',
             password=PASSWORD,
             first_name='Fifamè',
             last_name='Adjé',
@@ -141,7 +141,7 @@ class Command(BaseCommand):
             MedecinService.objects.get_or_create(medecin=m2, service=services[1])  # Pédiatrie
 
         med3 = self._create_user(
-            email='dr.houessou@esante-benin.com',
+            email='dr.houessou@HOPITEL-benin.com',
             password=PASSWORD,
             first_name='Boris',
             last_name='Houessou',
@@ -160,7 +160,7 @@ class Command(BaseCommand):
 
         # ── Laborantins ──
         lab1 = self._create_user(
-            email='lab.dossou@esante-benin.com',
+            email='lab.dossou@HOPITEL-benin.com',
             password=PASSWORD,
             first_name='Hervé',
             last_name='Dossou',
@@ -177,7 +177,7 @@ class Command(BaseCommand):
             )
 
         lab2 = self._create_user(
-            email='lab.agbo@esante-benin.com',
+            email='lab.agbo@HOPITEL-benin.com',
             password=PASSWORD,
             first_name='Grace',
             last_name='Agbo',
@@ -262,14 +262,14 @@ class Command(BaseCommand):
         self.stdout.write('=' * 50)
         self.stdout.write(f'\nMot de passe commun : {PASSWORD}')
         self.stdout.write('\nComptes créés :')
-        self.stdout.write(f'  Admin Général    : admin@esante-benin.com')
-        self.stdout.write(f'  Admin Hôpital 1  : admin.cotonou@esante-benin.com')
-        self.stdout.write(f'  Admin Hôpital 2  : admin.portonovo@esante-benin.com')
-        self.stdout.write(f'  Médecin 1        : dr.kokou@esante-benin.com')
-        self.stdout.write(f'  Médecin 2        : dr.adje@esante-benin.com')
-        self.stdout.write(f'  Médecin 3        : dr.houessou@esante-benin.com')
-        self.stdout.write(f'  Laborantin 1     : lab.dossou@esante-benin.com')
-        self.stdout.write(f'  Laborantin 2     : lab.agbo@esante-benin.com')
+        self.stdout.write(f'  Admin Général    : admin@HOPITEL-benin.com')
+        self.stdout.write(f'  Admin Hôpital 1  : admin.cotonou@HOPITEL-benin.com')
+        self.stdout.write(f'  Admin Hôpital 2  : admin.portonovo@HOPITEL-benin.com')
+        self.stdout.write(f'  Médecin 1        : dr.kokou@HOPITEL-benin.com')
+        self.stdout.write(f'  Médecin 2        : dr.adje@HOPITEL-benin.com')
+        self.stdout.write(f'  Médecin 3        : dr.houessou@HOPITEL-benin.com')
+        self.stdout.write(f'  Laborantin 1     : lab.dossou@HOPITEL-benin.com')
+        self.stdout.write(f'  Laborantin 2     : lab.agbo@HOPITEL-benin.com')
         self.stdout.write(f'  Patient 1        : patient1@test.com')
         self.stdout.write(f'  Patient 2        : patient2@test.com')
         self.stdout.write(f'  Patient 3        : patient3@test.com')

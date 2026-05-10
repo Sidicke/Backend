@@ -43,7 +43,7 @@ class DemandeAnalyse(models.Model):
     patient = models.ForeignKey(
         'accounts.Patient', on_delete=models.SET_NULL,
         null=True, blank=True, related_name='demandes_analyse',
-        verbose_name='patient (compte E-Santé)',
+        verbose_name='patient (compte HOPITEL)',
     )
     # Informations patient (obligatoires — pour les non-inscrits ou doublon de référence)
     patient_nom = models.CharField('nom du patient', max_length=100)

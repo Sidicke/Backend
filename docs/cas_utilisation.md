@@ -27,7 +27,7 @@ actor "Admin Hôpital" as AH
 actor "Admin Général" as AG
 actor "Assistant IA" as IA
 
-rectangle "Plateforme E-Santé - HOPITEL" {
+rectangle "Plateforme HOPITEL - HOPITEL" {
 
   package "Accueil & Compte" {
     usecase "Gérer son profil\n(Inscription, Auth)" as UC_AUTH

@@ -12,6 +12,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.views import View
+from notifications.utils import create_notification
 
 from .models import Patient, Medecin, Laborantin
 from .permissions import IsAdminGeneral, IsAdminGeneralOrAdminHopital
@@ -24,6 +25,7 @@ from .serializers import (
     MedecinCSVImportSerializer,
 )
 from .utils import generate_secure_token, send_verification_email, send_account_created_email, send_password_reset_email
+from Chatbot.whatsapp_utils import send_whatsapp_message
 from django.core.signing import TimestampSigner, SignatureExpired, BadSignature
 
 signer = TimestampSigner()
@@ -51,16 +53,46 @@ class PatientRegisterView(generics.CreateAPIView):
         # Le compte est créé inactif par défaut (voir serializer)
         # Il sera activé via le clic sur le lien reçu par e-mail.
 
-        # On tente d'envoyer l'e-mail. Si ça échoue, on annule tout pour ne pas laisser de compte "mort".
-        token = generate_secure_token(user.pk)
+        # Génération d'un code d'activation à 6 chiffres (OTP)
+        import random
+        otp_code = "".join([str(random.randint(0, 9)) for _ in range(6)])
+        user.activation_code = otp_code
+        user.save(update_fields=['activation_code'])
+
+        # On tente d'envoyer l'e-mail avec le CODE
+        email_sent = True
         try:
-            send_verification_email(user, token)
+            send_verification_email(user, otp_code)
         except Exception as e:
-            # On lève une erreur pour déclencher le rollback de transaction.atomic
-            raise serializers.ValidationError({
-                "email": f"Échec de l'envoi de l'email de confirmation : {str(e)}. "
-                         "Vérifiez vos paramètres de messagerie sur Railway."
-            })
+            # On ne lève pas d'erreur pour ne pas bloquer l'inscription.
+            # Le système WhatsApp prendra le relais.
+            email_sent = False
+
+        # --- OPTIONNEL : Notification WhatsApp avec le CODE ---
+        whatsapp_sent = False
+        try:
+            phone = getattr(user, 'phone', None) or request.data.get('phone')
+            if phone:
+                clean_phone = "".join(filter(str.isdigit, str(phone)))
+                welcome_msg = (
+                    f"Bienvenue chez *HOPITEL* ! 🎉\n\n"
+                    f"Votre code d'activation est : *{otp_code}*\n\n"
+                    "Saisissez ce code dans l'application pour valider votre compte. "
+                )
+                if not email_sent:
+                    welcome_msg += "L'envoi de l'email a échoué. Heureusement, ce code WhatsApp est suffisant pour activer votre compte."
+                
+                send_whatsapp_message(clean_phone, welcome_msg)
+                whatsapp_sent = True
+        except Exception:
+            pass 
+
+        if not email_sent and not whatsapp_sent:
+            # Si les deux échouent, on avertit l'utilisateur (mais le compte est quand même créé)
+            return Response(
+                {'message': "Inscription réussie ! Cependant, nous n'avons pas pu vous envoyer le code par email ou par WhatsApp. Veuillez contacter le support."},
+                status=status.HTTP_201_CREATED,
+            )
 
         return Response(
             {'message': "Inscription réussie ! Un email de confirmation a été envoyé à votre adresse. Veuillez vérifier votre boîte mail pour activer votre compte."},
@@ -70,38 +102,40 @@ class PatientRegisterView(generics.CreateAPIView):
 
 from django.shortcuts import render
 
-class VerifyEmailView(APIView):
-    """Vérification de l'adresse email du patient (retourne une page HTML pour les mobiles)."""
 
+class ActivateByCodeView(APIView):
+    """Vérification de l'adresse email via le code à 6 chiffres (OTP)."""
     permission_classes = [AllowAny]
 
-    def get(self, request, token):
-        try:
-            # Vérifier le token avec une validité de 24h (86400 secondes)
-            user_pk = signer.unsign(token, max_age=86400)
-            user = User.objects.get(pk=user_pk)
-        except SignatureExpired:
-            return render(request, 'accounts/activation_invalid.html', {'error': "Le lien de vérification a expiré (plus de 24h)."}, status=status.HTTP_400_BAD_REQUEST)
-        except (BadSignature, User.DoesNotExist):
-            return render(request, 'accounts/activation_invalid.html', {'error': "Le lien de vérification est invalide ou corrompu."}, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        email = request.data.get('email')
+        code = request.data.get('code')
 
-        if user.is_active and getattr(user, 'is_email_verified', False):
-            # Si le compte est déjà activé, on affiche quand même le succès
-            return render(request, 'accounts/activation_success.html', status=status.HTTP_200_OK)
+        if not email or not code:
+            return Response({'error': "L'email et le code sont requis."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email, activation_code=code)
+        except User.DoesNotExist:
+            return Response({'error': "Code de validation incorrect ou email invalide."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if user.is_active and user.is_email_verified:
+            return Response({'message': "Compte déjà activé."}, status=status.HTTP_200_OK)
 
         user.is_active = True
         user.is_email_verified = True
-        user.save(update_fields=['is_active', 'is_email_verified'])
+        user.activation_code = ""  # On vide le code après usage
+        user.save(update_fields=['is_active', 'is_email_verified', 'activation_code'])
 
-        # Créer une notification de bienvenue
+        # Notification de bienvenue
         from notifications.utils import create_notification
         create_notification(
             user=user,
             type='compte_cree',
-            message=f"Bienvenue {user.first_name} ! Votre compte a été activé avec succès.",
+            message=f"Bienvenue {user.first_name} ! Votre compte a été activé avec succès sur HOPITEL.",
         )
 
-        return render(request, 'accounts/activation_success.html', status=status.HTTP_200_OK)
+        return Response({'message': "Votre compte a été activé avec succès. Vous pouvez maintenant vous connecter."}, status=status.HTTP_200_OK)
 
 # ──────────────────────────────────────────────
 # Réinitialisation de mot de passe
@@ -260,12 +294,26 @@ class MedecinListCreateView(generics.ListCreateAPIView):
         token = generate_secure_token(medecin.user.pk)
         send_account_created_email(medecin.user, reset_token=token)
 
-        from notifications.utils import create_notification
         create_notification(
             user=medecin.user,
             type='compte_cree',
-            message=f"Bienvenue Dr. {medecin.user.last_name} ! Votre compte médecin a été créé.",
+            message=f"Bienvenue Dr. {medecin.user.last_name} ! Votre compte médecin a été créé sur HOPITEL.",
         )
+
+        # Envoi des identifiants par WhatsApp
+        try:
+            phone = medecin.user.telephone
+            if phone:
+                clean_phone = "".join(filter(str.isdigit, str(phone)))
+                creds_msg = (
+                    f"Bonjour Dr. {medecin.user.last_name}, bienvenue chez *HOPITEL* ! 👩‍⚕️👨‍⚕️\n\n"
+                    f"Votre compte médecin a été créé.\n"
+                    f"Identifiant : *{medecin.user.email}*\n\n"
+                    "Un email vous a été envoyé pour configurer votre mot de passe."
+                )
+                send_whatsapp_message(clean_phone, creds_msg)
+        except Exception:
+            pass
 
 
 class MedecinDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -366,12 +414,26 @@ class LaborantinListCreateView(generics.ListCreateAPIView):
         token = generate_secure_token(laborantin.user.pk)
         send_account_created_email(laborantin.user, reset_token=token)
 
-        from notifications.utils import create_notification
         create_notification(
             user=laborantin.user,
             type='compte_cree',
-            message=f"Bienvenue {laborantin.user.first_name} ! Votre compte laborantin a été créé.",
+            message=f"Bienvenue {laborantin.user.first_name} ! Votre compte laborantin a été créé sur HOPITEL.",
         )
+
+        # Envoi des identifiants par WhatsApp
+        try:
+            phone = laborantin.user.telephone
+            if phone:
+                clean_phone = "".join(filter(str.isdigit, str(phone)))
+                creds_msg = (
+                    f"Bonjour {laborantin.user.first_name}, bienvenue chez *HOPITEL* ! 🔬\n\n"
+                    f"Votre compte laborantin a été créé.\n"
+                    f"Identifiant : *{laborantin.user.email}*\n\n"
+                    "Un email vous a été envoyé pour configurer votre mot de passe."
+                )
+                send_whatsapp_message(clean_phone, creds_msg)
+        except Exception:
+            pass
 
 
 class LaborantinDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -475,8 +537,23 @@ class AdminHopitalListCreateView(generics.ListCreateAPIView):
         create_notification(
             user=user,
             type='compte_cree',
-            message=f"Bienvenue {user.first_name} ! Votre compte administrateur d'hôpital a été créé.",
+            message=f"Bienvenue {user.first_name} ! Votre compte administrateur d'hôpital a été créé sur HOPITEL.",
         )
+
+        # Envoi des identifiants par WhatsApp
+        try:
+            phone = user.telephone
+            if phone:
+                clean_phone = "".join(filter(str.isdigit, str(phone)))
+                creds_msg = (
+                    f"Bonjour {user.first_name}, bienvenue chez *HOPITEL* ! 🏢\n\n"
+                    f"Votre compte Administrateur Hôpital a été créé.\n"
+                    f"Identifiant : *{user.email}*\n\n"
+                    "Un email vous a été envoyé pour configurer votre mot de passe."
+                )
+                send_whatsapp_message(clean_phone, creds_msg)
+        except Exception:
+            pass
 
 
 class AdminHopitalDetailView(generics.RetrieveUpdateDestroyAPIView):

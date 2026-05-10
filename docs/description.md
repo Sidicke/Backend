@@ -1,4 +1,4 @@
-# Interprétation des Diagrammes UML — E-Santé Bénin
+# Interprétation des Diagrammes UML — HOPITEL
 
 ---
 
@@ -6,7 +6,7 @@
 
 ### 1.1 Description générale
 
-Le diagramme de cas d'utilisation présente les interactions entre les **cinq acteurs** du système (Patient, Médecin, Laborantin, Administrateur Hôpital, Administrateur Général) ainsi qu'un acteur système (**Assistant IA / Groq**). Il recense l'ensemble des fonctionnalités offertes par la plateforme E-Santé Bénin, organisées en huit grands blocs fonctionnels :
+Le diagramme de cas d'utilisation présente les interactions entre les **cinq acteurs** du système (Patient, Médecin, Laborantin, Administrateur Hôpital, Administrateur Général) ainsi qu'un acteur système (**Assistant IA / Groq**). Il recense l'ensemble des fonctionnalités offertes par la plateforme HOPITEL, organisées en huit grands blocs fonctionnels :
 
 - **Authentification & Compte** — Inscription, connexion JWT, réinitialisation de mot de passe.
 - **Gestion des Rendez-vous** — Recherche, prise, confirmation, annulation, terminaison de RDV.

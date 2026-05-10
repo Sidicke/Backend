@@ -12,6 +12,7 @@ from django.utils.html import strip_tags
 from accounts.models import Medecin
 from accounts.permissions import IsAdminGeneral, IsAdminGeneralOrAdminHopital, IsPatient
 from notifications.utils import create_notification
+from Chatbot.whatsapp_utils import send_whatsapp_message
 from .models import Hopital, Service, HopitalService, MedecinService, DemandeAjoutService
 from .permissions import IsAdminHopitalOwner
 from .serializers import (
@@ -219,19 +220,19 @@ class DemandeValiderView(APIView):
             message=f"Votre demande d'ajout du service « {service.nom} » pour l'hôpital {demande.hopital.nom} a été validée.",
         )
 
-        # Envoyer un e-mail
-        html_message = render_to_string('hopitaux/emails/service_valide.html', {
-            'demande': demande,
-            'service_nom': service.nom,
-        })
-        send_mail(
-            subject=f"Validation de votre service : {service.nom}",
-            message=strip_tags(html_message),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[demande.demande_par.email],
-            html_message=html_message,
-            fail_silently=True,
-        )
+        # Envoi notification WhatsApp à l'Admin Hôpital
+        try:
+            admin_tel = demande.demande_par.telephone
+            if admin_tel:
+                clean_phone = "".join(filter(str.isdigit, str(admin_tel)))
+                msg = (
+                    f"✅ Service Validé ! (*HOPITEL*)\n\n"
+                    f"Votre demande pour le service « {service.nom} » a été approuvée.\n"
+                    f"Il est désormais actif pour votre hôpital ({demande.hopital.nom})."
+                )
+                send_whatsapp_message(clean_phone, msg)
+        except Exception:
+            pass
 
         return Response(
             {'message': f"Demande validée. Le service « {service.nom} » a été ajouté à l'hôpital."},

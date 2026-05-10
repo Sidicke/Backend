@@ -16,21 +16,21 @@ from messagerie.models import Message
 User = get_user_model()
 
 def run():
-    print("[START] Début du Seed Exhaustif (v3) pour E-Santé Bénin")
+    print("[START] Début du Seed Exhaustif (v3) pour HOPITEL")
     
     # ─────────────────────────────────────────────────────────
     # 0. Nettoyage (Optionnel mais recommandé pour la prod)
     # ─────────────────────────────────────────────────────────
     test_emails = [
-        "admin@esante-benin.com", "admin.cnhu@esante.com", "admin.chud@esante.com", 
-        "admin.parakou@esante.com", "admin.calavi@esante.com",
-        "sidicke@esante.com", "patient2@esante.com", "patient3@esante.com", 
-        "patient4@esante.com", "patient5@esante.com", "patient6@esante.com",
-        "dossou@esante.com", "tossou@esante.com", "gnonlonfoun@esante.com",
-        "houessou@esante.com", "agossou@esante.com", "zannou@esante.com",
-        "bio@esante.com", "sika@esante.com", "mama@esante.com",
-        "kodjo@esante.com", "sossa@esante.com", "ati@esante.com",
-        "lab.cnhu@esante.com", "lab.chud@esante.com", "lab.parakou@esante.com"
+        "admin@HOPITEL-benin.com", "admin.cnhu@HOPITEL.com", "admin.chud@HOPITEL.com", 
+        "admin.parakou@HOPITEL.com", "admin.calavi@HOPITEL.com",
+        "sidicke@HOPITEL.com", "patient2@HOPITEL.com", "patient3@HOPITEL.com", 
+        "patient4@HOPITEL.com", "patient5@HOPITEL.com", "patient6@HOPITEL.com",
+        "dossou@HOPITEL.com", "tossou@HOPITEL.com", "gnonlonfoun@HOPITEL.com",
+        "houessou@HOPITEL.com", "agossou@HOPITEL.com", "zannou@HOPITEL.com",
+        "bio@HOPITEL.com", "sika@HOPITEL.com", "mama@HOPITEL.com",
+        "kodjo@HOPITEL.com", "sossa@HOPITEL.com", "ati@HOPITEL.com",
+        "lab.cnhu@HOPITEL.com", "lab.chud@HOPITEL.com", "lab.parakou@HOPITEL.com"
     ]
     print(f"Nettoyage de {len(test_emails)} comptes de test...")
     User.objects.filter(email__in=test_emails).delete()
@@ -54,34 +54,34 @@ def run():
 
     def create_user(email, role, hopital=None, first_name="User", last_name="Test"):
         u, _ = User.objects.get_or_create(email=email, defaults={"role": role, "hopital": hopital, "first_name": first_name, "last_name": last_name, "telephone": "0100000000", "sexe": "M"})
-        u.set_password("Esante2025!"); u.is_active = True; u.is_email_verified = True; u.save()
+        u.set_password("HOPITEL2025!"); u.is_active = True; u.is_email_verified = True; u.save()
         return u
 
     # Admins
-    create_user("admin@esante-benin.com", "admin_general", None, "Super", "Admin")
-    create_user("admin.cnhu@esante.com", "admin_hopital", h_cnhu, "Directeur", "CNHU")
-    create_user("admin.chud@esante.com", "admin_hopital", h_pnovo, "Directeur", "CHUD")
-    create_user("admin.parakou@esante.com", "admin_hopital", h_parakou, "Directeur", "PARAKOU")
-    create_user("admin.calavi@esante.com", "admin_hopital", h_calavi, "Directeur", "CALAVI")
+    create_user("admin@HOPITEL-benin.com", "admin_general", None, "Super", "Admin")
+    create_user("admin.cnhu@HOPITEL.com", "admin_hopital", h_cnhu, "Directeur", "CNHU")
+    create_user("admin.chud@HOPITEL.com", "admin_hopital", h_pnovo, "Directeur", "CHUD")
+    create_user("admin.parakou@HOPITEL.com", "admin_hopital", h_parakou, "Directeur", "PARAKOU")
+    create_user("admin.calavi@HOPITEL.com", "admin_hopital", h_calavi, "Directeur", "CALAVI")
 
     # Médecins (3 par hôpital = 12 total)
     med_list = [
         # CNHU
-        (h_cnhu, "dossou@esante.com", "Jean", "DOSSOU", "Cardiologie", "MED-001"),
-        (h_cnhu, "tossou@esante.com", "Marie", "TOSSOU", "Pédiatrie", "MED-002"),
-        (h_cnhu, "gnonlonfoun@esante.com", "Alain", "GNONLONFOUN", "Gynécologie", "MED-003"),
+        (h_cnhu, "dossou@HOPITEL.com", "Jean", "DOSSOU", "Cardiologie", "MED-001"),
+        (h_cnhu, "tossou@HOPITEL.com", "Marie", "TOSSOU", "Pédiatrie", "MED-002"),
+        (h_cnhu, "gnonlonfoun@HOPITEL.com", "Alain", "GNONLONFOUN", "Gynécologie", "MED-003"),
         # CHUD
-        (h_pnovo, "houessou@esante.com", "Marc", "HOUESSOU", "Pédiatrie", "MED-004"),
-        (h_pnovo, "agossou@esante.com", "Sophie", "AGOSSOU", "Neurologie", "MED-005"),
-        (h_pnovo, "zannou@esante.com", "Basile", "ZANNOU", "Pédiatrie", "MED-006"),
+        (h_pnovo, "houessou@HOPITEL.com", "Marc", "HOUESSOU", "Pédiatrie", "MED-004"),
+        (h_pnovo, "agossou@HOPITEL.com", "Sophie", "AGOSSOU", "Neurologie", "MED-005"),
+        (h_pnovo, "zannou@HOPITEL.com", "Basile", "ZANNOU", "Pédiatrie", "MED-006"),
         # PARAKOU
-        (h_parakou, "bio@esante.com", "Yacoubou", "BIO", "Chirurgie Générale", "MED-007"),
-        (h_parakou, "sika@esante.com", "Félicien", "SIKA", "Ophtalmologie", "MED-008"),
-        (h_parakou, "mama@esante.com", "Saidou", "MAMA", "Chirurgie Générale", "MED-009"),
+        (h_parakou, "bio@HOPITEL.com", "Yacoubou", "BIO", "Chirurgie Générale", "MED-007"),
+        (h_parakou, "sika@HOPITEL.com", "Félicien", "SIKA", "Ophtalmologie", "MED-008"),
+        (h_parakou, "mama@HOPITEL.com", "Saidou", "MAMA", "Chirurgie Générale", "MED-009"),
         # CALAVI
-        (h_calavi, "kodjo@esante.com", "René", "KODJO", "Gynécologie", "MED-010"),
-        (h_calavi, "sossa@esante.com", "Pierrette", "SOSSA", "Gynécologie", "MED-011"),
-        (h_calavi, "ati@esante.com", "Gérard", "ATI", "Gynécologie", "MED-012"),
+        (h_calavi, "kodjo@HOPITEL.com", "René", "KODJO", "Gynécologie", "MED-010"),
+        (h_calavi, "sossa@HOPITEL.com", "Pierrette", "SOSSA", "Gynécologie", "MED-011"),
+        (h_calavi, "ati@HOPITEL.com", "Gérard", "ATI", "Gynécologie", "MED-012"),
     ]
 
     med_objs = {}
@@ -94,15 +94,15 @@ def run():
         med_objs[email] = med
         u_med_objs[email] = u
 
-    med1 = med_objs["dossou@esante.com"]
-    u_med1 = u_med_objs["dossou@esante.com"]
-    med2 = med_objs["tossou@esante.com"]
+    med1 = med_objs["dossou@HOPITEL.com"]
+    u_med1 = u_med_objs["dossou@HOPITEL.com"]
+    med2 = med_objs["tossou@HOPITEL.com"]
 
     # Laborantins (3 au total)
     labos = [
-        (h_cnhu, "lab.cnhu@esante.com", "Paul", "DOSSOU-LAB", "Labo CNHU"),
-        (h_pnovo, "lab.chud@esante.com", "Anne", "MARIE-LAB", "Labo CHUD Porto-Novo"),
-        (h_parakou, "lab.parakou@esante.com", "Abdou", "RAMANE-LAB", "Bio-Lab Parakou"),
+        (h_cnhu, "lab.cnhu@HOPITEL.com", "Paul", "DOSSOU-LAB", "Labo CNHU"),
+        (h_pnovo, "lab.chud@HOPITEL.com", "Anne", "MARIE-LAB", "Labo CHUD Porto-Novo"),
+        (h_parakou, "lab.parakou@HOPITEL.com", "Abdou", "RAMANE-LAB", "Bio-Lab Parakou"),
     ]
     lab_objs = {}
     for hop, email, fn, ln, lab_name in labos:
@@ -110,7 +110,7 @@ def run():
         Laborantin.objects.get_or_create(user=u, defaults={"laboratoire": lab_name})
         lab_objs[email] = u
 
-    u_lab1 = lab_objs["lab.cnhu@esante.com"]
+    u_lab1 = lab_objs["lab.cnhu@HOPITEL.com"]
 
     # ─────────────────────────────────────────────────────────
     # 3. Patients (6 profils variés)
@@ -120,12 +120,12 @@ def run():
         p, _ = Patient.objects.get_or_create(user=u, defaults={"groupe_sanguin": "O+"})
         return p
 
-    p1 = create_patient("sidicke@esante.com", "Sidicke", "TRAORE") # Flow complet
-    p2 = create_patient("patient2@esante.com", "Alice", "BENIN")   # RDV en attente
-    p3 = create_patient("patient3@esante.com", "Bob", "CANCEL")    # Historique annulé
-    p4 = create_patient("patient4@esante.com", "Claire", "LABO")   # Que du labo
-    p5 = create_patient("patient5@esante.com", "David", "INTAKE") # Que de l'intake
-    p6 = create_patient("patient6@esante.com", "Eve", "NEW")       # Nouveau né (vidé)
+    p1 = create_patient("sidicke@HOPITEL.com", "Sidicke", "TRAORE") # Flow complet
+    p2 = create_patient("patient2@HOPITEL.com", "Alice", "BENIN")   # RDV en attente
+    p3 = create_patient("patient3@HOPITEL.com", "Bob", "CANCEL")    # Historique annulé
+    p4 = create_patient("patient4@HOPITEL.com", "Claire", "LABO")   # Que du labo
+    p5 = create_patient("patient5@HOPITEL.com", "David", "INTAKE") # Que de l'intake
+    p6 = create_patient("patient6@HOPITEL.com", "Eve", "NEW")       # Nouveau né (vidé)
 
     # ACTIONS PATIENT 1 (Sidicke): RDV Terminé + Consultation + Message + Labo
     demain = timezone.now() + timedelta(days=1)

@@ -1,0 +1,162 @@
+🎯 OBJECTIF GLOBAL
+
+Enhance the existing healthcare platform by implementing backend-level improvements only, including:
+
+Twilio SMS integration
+Structured medical workflows
+Proper data relationships (doctor / hospital / patient / laboratorian)
+Controlled communication logic
+Clear backend → frontend compatibility
+⚠️ CONSTRAINTS (CRITICAL)
+❗ Work ONLY on the backend
+❗ Do NOT modify frontend UI/design
+❗ Do NOT break existing functionalities
+❗ Extend the system cleanly
+❗ Ensure compatibility between local and online environments
+📲 1. TWILIO SMS INTEGRATION
+
+Implement Twilio as a backend service for SMS notifications.
+
+🔔 Events:
+👨‍⚕️ Doctor notification:
+Trigger: new appointment created
+Content:
+patient name
+relevant info
+👤 Patient confirmation:
+Trigger: appointment confirmed
+Content:
+doctor name
+hospital
+date and time
+🧪 Lab results:
+Trigger: results available
+Content:
+hospital name
+secure verification code
+🏥 2. DATA RELATIONSHIP STRUCTURE
+
+Ensure:
+
+Doctor → owns patients
+Hospital → owns doctors + aggregated patients
+
+👉 Queries and endpoints must reflect this hierarchy clearly.
+
+👨‍⚕️ 3. DOCTOR WORKFLOW
+Confirm appointment
+Mark as completed
+🔁 When completed:
+Becomes a consultation
+Enables chat
+🔒 Closing:
+Doctor can close consultation
+After closure:
+chat must be disabled (backend enforced)
+🏥 4. HOSPITAL ADMIN ACCESS
+
+Provide backend data for:
+
+All patients linked to hospital
+Patient profile:
+history
+status:
+ongoing
+completed
+🧪 5. LABORATORIAN MODULE
+🎯 Logic:
+When appointment is completed:
+patient becomes available to laboratorian
+✅ Requirements:
+Provide filtered list:
+by name
+by email
+Scope:
+hospital-based only
+💬 6. CHAT CONTROL (BACKEND)
+Enabled only after completion
+Disabled after consultation closure
+Must be enforced server-side
+🔔 7. PUSH NOTIFICATIONS (BACKEND TRIGGERS)
+Trigger when:
+new message arrives
+Must support real-time behavior
+📧 8. CHANNEL STRATEGY
+Twilio → SMS
+Gmail → already implemented
+Push → chat
+🔍 9. BACKEND → FRONTEND COMPATIBILITY ANALYSIS (CRITICAL)
+
+Before implementing, perform a full impact analysis:
+
+🎯 Goals:
+Identify:
+Features that already work with current frontend
+Features that require NO frontend modification
+
+👉 These must:
+
+Be implemented in a way that works immediately
+Identify:
+Features that require frontend updates
+
+👉 For these:
+
+Clearly document and notify:
+what needs to change
+why
+expected data format
+expected behavior
+📌 Output requirement:
+
+Provide a clear developer note/report including:
+
+✅ Compatible features (no frontend change needed)
+⚠️ Features requiring frontend adaptation
+📡 New endpoints or data structures
+🔁 Changes in response format (if any)
+🎯 FINAL EXPECTATION
+
+A backend system that:
+
+Is fully functional and scalable
+Integrates Twilio SMS correctly
+Implements clean medical workflows
+Enforces all business logic server-side
+Clearly communicates with frontend
+Minimizes frontend rework
+🔚 FINAL NOTE FOR FRONTEND ORIENTATION
+
+The backend must:
+
+Provide clean APIs
+Be predictable and consistent
+Allow the frontend to integrate easily
+Avoid forcing unnecessary frontend refactoring
+
+👉 Any required frontend change must be explicitly documented and justified
+📲 TWILIO CONFIGURATION REQUIREMENTS
+
+Use Twilio for SMS integration. The following credentials will be provided:
+
+Account SID:
+Auth Token:
+Twilio Phone Number:
+
+These credentials must be securely stored in environment variables and never exposed to the frontend.
+
+📱 PHONE NUMBER FORMAT RULE
+
+All phone numbers must follow this rule:
+
+Input format (user side):
+10 digits
+must start with “01”
+Backend must:
+validate the format strictly
+automatically convert to international format:
+
+👉 +229XXXXXXXX
+
+Only valid numbers should be processed for SMS sending.
+Je veux le plan d'implementation en francais et tous ce qui est détails lors du travail en francais 

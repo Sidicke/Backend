@@ -151,10 +151,13 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@esante-benin.com')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@HOPITEL-benin.com')
 
 # URL du frontend
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:8080')
+
+# URL du service WhatsApp (Microservice Node.js)
+WHATSAPP_SERVICE_URL = config('WHATSAPP_SERVICE_URL', default='http://localhost:3001')
 
 # URL du backend (pour les liens de validation d'emails qui doivent ouvrir une page web sur le backend)
 BACKEND_URL = config('BACKEND_URL', default='http://localhost:8000')

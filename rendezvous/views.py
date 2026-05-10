@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from accounts.models import Medecin
 from accounts.permissions import IsAdminGeneral, IsMedecin, IsPatient, IsMedecinOrAdminGeneral
 from notifications.utils import create_notification
+from Chatbot.whatsapp_utils import send_whatsapp_message
 from .models import Disponibilite, RendezVous, Consultation
 from .permissions import (
     IsDisponibiliteOwner, IsRendezVousMedecin, IsRendezVousParticipant,
@@ -247,16 +248,18 @@ class RendezVousConfirmerView(APIView):
         except Exception:
             pass
 
-        # Envoi du SMS Twilio au patient
-        from accounts.twilio_utils import send_twilio_sms
+        # Envoi de la notification WhatsApp au patient
         try:
             patient_tel = rdv.patient.user.telephone
             if patient_tel:
+                clean_phone = "".join(filter(str.isdigit, str(patient_tel)))
                 msg = (
-                    f"E-SANTE: RDV confirme avec Dr. {rdv.medecin.user.last_name} "
-                    f"au {rdv.medecin.user.hopital.nom} le {rdv.date_heure.strftime('%d/%m/%Y a %H:%M')}."
+                    f"✅ RDV Confirmé !\n\n"
+                    f"Votre rendez-vous avec Dr. {rdv.medecin.user.last_name} "
+                    f"est confirmé pour le {rdv.date_heure.strftime('%d/%m/%Y à %H:%M')}.\n"
+                    f"Lieu : {rdv.medecin.user.hopital.nom}"
                 )
-                send_twilio_sms(patient_tel, msg)
+                send_whatsapp_message(clean_phone, msg)
         except Exception:
             pass
 
@@ -300,10 +303,18 @@ class RendezVousRefuserView(APIView):
             lien=f"/api/rendezvous/{rdv.pk}/",
         )
         
-        # Envoi de l'email au patient
-        from accounts.utils import send_appointment_status_email
+        # Envoi de la notification WhatsApp au patient (Refus)
         try:
-            send_appointment_status_email(rdv)
+            patient_tel = rdv.patient.user.telephone
+            if patient_tel:
+                clean_phone = "".join(filter(str.isdigit, str(patient_tel)))
+                msg = (
+                    f"❌ RDV Refusé\n\n"
+                    f"Votre rendez-vous avec Dr. {rdv.medecin.user.last_name} "
+                    f"le {rdv.date_heure.strftime('%d/%m/%Y à %H:%M')} a été refusé.\n"
+                    f"Motif : {rdv.commentaire_annulation}"
+                )
+                send_whatsapp_message(clean_phone, msg)
         except Exception:
             pass
 
@@ -336,16 +347,20 @@ class RendezVousAnnulerView(APIView):
         rdv.commentaire_annulation = serializer.validated_data['commentaire']
         rdv.save(update_fields=['statut', 'commentaire_annulation', 'modifie_le'])
 
-        create_notification(
-            user=rdv.patient.user,
-            type='rdv_annule',
-            message=(
-                f"Votre rendez-vous avec Dr. {rdv.medecin.user.last_name} "
-                f"le {rdv.date_heure.strftime('%d/%m/%Y à %H:%M')} a été annulé. "
-                f"Motif : {rdv.commentaire_annulation}"
-            ),
-            lien=f"/api/rendezvous/{rdv.pk}/",
-        )
+        # Envoi notification WhatsApp (Annulation)
+        try:
+            patient_tel = rdv.patient.user.telephone
+            if patient_tel:
+                clean_phone = "".join(filter(str.isdigit, str(patient_tel)))
+                msg = (
+                    f"⚠️ RDV Annulé\n\n"
+                    f"Votre rendez-vous avec Dr. {rdv.medecin.user.last_name} "
+                    f"le {rdv.date_heure.strftime('%d/%m/%Y à %H:%M')} a été annulé par le médecin.\n"
+                    f"Motif : {rdv.commentaire_annulation}"
+                )
+                send_whatsapp_message(clean_phone, msg)
+        except Exception:
+            pass
 
         return Response({'message': 'Rendez-vous annulé.'}, status=status.HTTP_200_OK)
 

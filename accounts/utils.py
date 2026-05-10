@@ -10,18 +10,16 @@ def generate_secure_token(user_pk):
     """Génère un token cryptographiquement signé incluant un timestamp."""
     return signer.sign(str(user_pk))
 
-def send_verification_email(user, token):
-    """Envoie un email de vérification au patient inscrit."""
-    verification_url = f"{settings.BACKEND_URL}/api/accounts/verify-email/{token}/"
-
+def send_verification_email(user, otp_code):
+    """Envoie un email avec le code de vérification au patient inscrit."""
     html_message = render_to_string('accounts/emails/verification_email.html', {
         'user': user,
-        'verification_url': verification_url,
+        'otp_code': otp_code,
     })
     plain_message = strip_tags(html_message)
 
     send_mail(
-        subject="Confirmez votre compte E-Santé Bénin",
+        subject="Confirmez votre compte HOPITEL",
         message=plain_message,
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[user.email],
@@ -43,7 +41,7 @@ def send_account_created_email(user, password=None, reset_token=None):
     plain_message = strip_tags(html_message)
 
     send_mail(
-        subject="Bienvenue sur E-Santé Bénin - Votre compte a été créé",
+        subject="Bienvenue sur HOPITEL - Votre compte a été créé",
         message=plain_message,
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[user.email],
@@ -63,7 +61,7 @@ def send_password_reset_email(user, token):
     plain_message = strip_tags(html_message)
 
     send_mail(
-        subject="Réinitialisation de votre mot de passe - E-Santé Bénin",
+        subject="Réinitialisation de votre mot de passe - HOPITEL",
         message=plain_message,
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[user.email],
@@ -82,7 +80,7 @@ def send_appointment_request_email(rdv):
     }
     html_message = render_to_string('rendezvous/emails/nouvelle_demande.html', context)
     send_mail(
-        subject="Nouvelle demande de rendez-vous - E-Santé Bénin",
+        subject="Nouvelle demande de rendez-vous - HOPITEL",
         message=strip_tags(html_message),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[rdv.medecin.user.email],
@@ -104,7 +102,7 @@ def send_appointment_status_email(rdv):
     subject = "Confirmation de votre rendez-vous" if rdv.statut == 'confirme' else "Mise à jour de votre rendez-vous"
     html_message = render_to_string('rendezvous/emails/statut_rdv.html', context)
     send_mail(
-        subject=f"{subject} - E-Santé Bénin",
+        subject=f"{subject} - HOPITEL",
         message=strip_tags(html_message),
         from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[rdv.patient.user.email],

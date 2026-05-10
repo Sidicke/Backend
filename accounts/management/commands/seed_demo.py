@@ -28,7 +28,7 @@ from rendezvous.models import Consultation, Disponibilite, RendezVous, PreEnregi
 from resultats.models import Resultat
 
 User = get_user_model()
-PASSWORD = 'Esante2025!'
+PASSWORD = 'HOPITEL2025!'
 
 
 class Command(BaseCommand):
@@ -58,15 +58,15 @@ class Command(BaseCommand):
 
             # Liste des emails de démo du README
             demo_emails = [
-                'admin@esante-benin.com', 'admin.cnhu@esante.com', 'admin.chud@esante.com',
-                'admin.parakou@esante.com', 'admin.calavi@esante.com',
-                'dossou@esante.com', 'tossou@esante.com', 'gnonlonfoun@esante.com',
-                'houessou@esante.com', 'agossou@esante.com', 'zannou@esante.com',
-                'bio@esante.com', 'sika@esante.com', 'mama@esante.com',
-                'kodjo@esante.com', 'sossa@esante.com', 'ati@esante.com',
-                'lab.cnhu@esante.com', 'lab.chud@esante.com', 'lab.parakou@esante.com',
-                'sidicke@esante.com', 'patient2@esante.com', 'patient3@esante.com',
-                'patient4@esante.com', 'patient5@esante.com', 'patient6@esante.com',
+                'admin@HOPITEL-benin.com', 'admin.cnhu@HOPITEL.com', 'admin.chud@HOPITEL.com',
+                'admin.parakou@HOPITEL.com', 'admin.calavi@HOPITEL.com',
+                'dossou@HOPITEL.com', 'tossou@HOPITEL.com', 'gnonlonfoun@HOPITEL.com',
+                'houessou@HOPITEL.com', 'agossou@HOPITEL.com', 'zannou@HOPITEL.com',
+                'bio@HOPITEL.com', 'sika@HOPITEL.com', 'mama@HOPITEL.com',
+                'kodjo@HOPITEL.com', 'sossa@HOPITEL.com', 'ati@HOPITEL.com',
+                'lab.cnhu@HOPITEL.com', 'lab.chud@HOPITEL.com', 'lab.parakou@HOPITEL.com',
+                'sidicke@HOPITEL.com', 'patient2@HOPITEL.com', 'patient3@HOPITEL.com',
+                'patient4@HOPITEL.com', 'patient5@HOPITEL.com', 'patient6@HOPITEL.com',
             ]
             User.objects.filter(email__in=demo_emails).delete()
             
@@ -126,18 +126,18 @@ class Command(BaseCommand):
 
         # Liste des Médecins (Exactly 3 per hospital)
         docs_data = [
-            (h1, 'dossou@esante.com', 'Jean', 'DOSSOU', cardiologie, 'MED-BJ-001'),
-            (h1, 'tossou@esante.com', 'Marie', 'TOSSOU', pediatrie, 'MED-BJ-002'),
-            (h1, 'gnonlonfoun@esante.com', 'Alain', 'GNONLONFOUN', gynecologie, 'MED-BJ-003'),
-            (h2, 'houessou@esante.com', 'Marc', 'HOUESSOU', pediatrie, 'MED-BJ-004'),
-            (h2, 'agossou@esante.com', 'Sophie', 'AGOSSOU', neurologie, 'MED-BJ-005'),
-            (h2, 'zannou@esante.com', 'Basile', 'ZANNOU', pediatrie, 'MED-BJ-006'),
-            (h3, 'bio@esante.com', 'Yacoubou', 'BIO', chirurgie, 'MED-BJ-007'),
-            (h3, 'sika@esante.com', 'Félicien', 'SIKA', ophtalmo, 'MED-BJ-008'),
-            (h3, 'mama@esante.com', 'Saidou', 'MAMA', chirurgie, 'MED-BJ-009'),
-            (h4, 'kodjo@esante.com', 'René', 'KODJO', gynecologie, 'MED-BJ-010'),
-            (h4, 'sossa@esante.com', 'Pierrette', 'SOSSA', medecine_gen, 'MED-BJ-011'),
-            (h4, 'ati@esante.com', 'Gérard', 'ATI', gynecologie, 'MED-BJ-012'),
+            (h1, 'dossou@HOPITEL.com', 'Jean', 'DOSSOU', cardiologie, 'MED-BJ-001'),
+            (h1, 'tossou@HOPITEL.com', 'Marie', 'TOSSOU', pediatrie, 'MED-BJ-002'),
+            (h1, 'gnonlonfoun@HOPITEL.com', 'Alain', 'GNONLONFOUN', gynecologie, 'MED-BJ-003'),
+            (h2, 'houessou@HOPITEL.com', 'Marc', 'HOUESSOU', pediatrie, 'MED-BJ-004'),
+            (h2, 'agossou@HOPITEL.com', 'Sophie', 'AGOSSOU', neurologie, 'MED-BJ-005'),
+            (h2, 'zannou@HOPITEL.com', 'Basile', 'ZANNOU', pediatrie, 'MED-BJ-006'),
+            (h3, 'bio@HOPITEL.com', 'Yacoubou', 'BIO', chirurgie, 'MED-BJ-007'),
+            (h3, 'sika@HOPITEL.com', 'Félicien', 'SIKA', ophtalmo, 'MED-BJ-008'),
+            (h3, 'mama@HOPITEL.com', 'Saidou', 'MAMA', chirurgie, 'MED-BJ-009'),
+            (h4, 'kodjo@HOPITEL.com', 'René', 'KODJO', gynecologie, 'MED-BJ-010'),
+            (h4, 'sossa@HOPITEL.com', 'Pierrette', 'SOSSA', medecine_gen, 'MED-BJ-011'),
+            (h4, 'ati@HOPITEL.com', 'Gérard', 'ATI', gynecologie, 'MED-BJ-012'),
         ]
 
         hopital_service_requirements = {}
@@ -175,27 +175,27 @@ class Command(BaseCommand):
         self.stdout.write('\n[DEMO] === 3. Autres Utilisateurs ===')
         
         # Admin Général
-        self._user(email='admin@esante-benin.com', first_name='Admin', last_name='Général', role='admin_general', 
+        self._user(email='admin@HOPITEL-benin.com', first_name='Admin', last_name='Général', role='admin_general', 
                    is_staff=True, is_superuser=True, telephone='+22990000001', date_naissance=date(1985,1,1), sexe='M')
 
         # Admins Hôpital
-        self._user(email='admin.cnhu@esante.com', first_name='Admin', last_name='CNHU', role='admin_hopital', hopital=h1, telephone='+22990000002', date_naissance=date(1980,1,1), sexe='M')
-        self._user(email='admin.chud@esante.com', first_name='Admin', last_name='CHUD', role='admin_hopital', hopital=h2, telephone='+22990000003', date_naissance=date(1980,1,1), sexe='F')
-        self._user(email='admin.parakou@esante.com', first_name='Admin', last_name='Parakou', role='admin_hopital', hopital=h3, telephone='+22990000004', date_naissance=date(1980,1,1), sexe='M')
-        self._user(email='admin.calavi@esante.com', first_name='Admin', last_name='Calavi', role='admin_hopital', hopital=h4, telephone='+22990000005', date_naissance=date(1980,1,1), sexe='F')
+        self._user(email='admin.cnhu@HOPITEL.com', first_name='Admin', last_name='CNHU', role='admin_hopital', hopital=h1, telephone='+22990000002', date_naissance=date(1980,1,1), sexe='M')
+        self._user(email='admin.chud@HOPITEL.com', first_name='Admin', last_name='CHUD', role='admin_hopital', hopital=h2, telephone='+22990000003', date_naissance=date(1980,1,1), sexe='F')
+        self._user(email='admin.parakou@HOPITEL.com', first_name='Admin', last_name='Parakou', role='admin_hopital', hopital=h3, telephone='+22990000004', date_naissance=date(1980,1,1), sexe='M')
+        self._user(email='admin.calavi@HOPITEL.com', first_name='Admin', last_name='Calavi', role='admin_hopital', hopital=h4, telephone='+22990000005', date_naissance=date(1980,1,1), sexe='F')
 
         # Laborantins
-        self._user(email='lab.cnhu@esante.com', first_name='Paul', last_name='DOSSOU-LAB', role='laborantin', hopital=h1, telephone='+22992000001', date_naissance=date(1990,1,1), sexe='M')
-        self._user(email='lab.chud@esante.com', first_name='Anne', last_name='MARIE-LAB', role='laborantin', hopital=h2, telephone='+22992000002', date_naissance=date(1990,1,1), sexe='F')
-        self._user(email='lab.parakou@esante.com', first_name='Abdou', last_name='RAMANE-LAB', role='laborantin', hopital=h3, telephone='+22992000003', date_naissance=date(1990,1,1), sexe='M')
+        self._user(email='lab.cnhu@HOPITEL.com', first_name='Paul', last_name='DOSSOU-LAB', role='laborantin', hopital=h1, telephone='+22992000001', date_naissance=date(1990,1,1), sexe='M')
+        self._user(email='lab.chud@HOPITEL.com', first_name='Anne', last_name='MARIE-LAB', role='laborantin', hopital=h2, telephone='+22992000002', date_naissance=date(1990,1,1), sexe='F')
+        self._user(email='lab.parakou@HOPITEL.com', first_name='Abdou', last_name='RAMANE-LAB', role='laborantin', hopital=h3, telephone='+22992000003', date_naissance=date(1990,1,1), sexe='M')
 
         # Patients
-        p_sidicke = self._user(email='sidicke@esante.com', first_name='Sidicke', last_name='TRAORE', role='patient', telephone='+22993000001', date_naissance=date(1995,1,1), sexe='M')
-        p_alice = self._user(email='patient2@esante.com', first_name='Alice', last_name='BENIN', role='patient', telephone='+22993000002', date_naissance=date(1992,1,1), sexe='F')
-        p_bob = self._user(email='patient3@esante.com', first_name='Bob', last_name='CANCEL', role='patient', telephone='+22993000003', date_naissance=date(1990,1,1), sexe='M')
-        p_claire = self._user(email='patient4@esante.com', first_name='Claire', last_name='LABO', role='patient', telephone='+22993000004', date_naissance=date(1994,1,1), sexe='F')
-        p_david = self._user(email='patient5@esante.com', first_name='David', last_name='INTAKE', role='patient', telephone='+22993000005', date_naissance=date(1991,1,1), sexe='M')
-        p_eve = self._user(email='patient6@esante.com', first_name='Eve', last_name='NEW', role='patient', telephone='+22993000006', date_naissance=date(1996,1,1), sexe='F')
+        p_sidicke = self._user(email='sidicke@HOPITEL.com', first_name='Sidicke', last_name='TRAORE', role='patient', telephone='+22993000001', date_naissance=date(1995,1,1), sexe='M')
+        p_alice = self._user(email='patient2@HOPITEL.com', first_name='Alice', last_name='BENIN', role='patient', telephone='+22993000002', date_naissance=date(1992,1,1), sexe='F')
+        p_bob = self._user(email='patient3@HOPITEL.com', first_name='Bob', last_name='CANCEL', role='patient', telephone='+22993000003', date_naissance=date(1990,1,1), sexe='M')
+        p_claire = self._user(email='patient4@HOPITEL.com', first_name='Claire', last_name='LABO', role='patient', telephone='+22993000004', date_naissance=date(1994,1,1), sexe='F')
+        p_david = self._user(email='patient5@HOPITEL.com', first_name='David', last_name='INTAKE', role='patient', telephone='+22993000005', date_naissance=date(1991,1,1), sexe='M')
+        p_eve = self._user(email='patient6@HOPITEL.com', first_name='Eve', last_name='NEW', role='patient', telephone='+22993000006', date_naissance=date(1996,1,1), sexe='F')
 
         # Profils Patients
         for u in [p_sidicke, p_alice, p_bob, p_claire, p_david, p_eve]:
@@ -207,7 +207,7 @@ class Command(BaseCommand):
         
         # Sidicke : RDV terminé + Consultation + Chat
         sidicke_prof = Patient.objects.get(user=p_sidicke)
-        dr_dossou = Medecin.objects.get(user__email='dossou@esante.com')
+        dr_dossou = Medecin.objects.get(user__email='dossou@HOPITEL.com')
         
         rdv_sid, _ = RendezVous.objects.get_or_create(
             patient=sidicke_prof, 
