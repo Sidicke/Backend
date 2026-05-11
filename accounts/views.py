@@ -46,56 +46,64 @@ class PatientRegisterView(generics.CreateAPIView):
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
+        from django.conf import settings
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         
-        # Le compte est créé inactif par défaut (voir serializer)
-        # Il sera activé via le clic sur le lien reçu par e-mail.
+        # --- AUTO-ACTIVATION (Production optimization) ---
+        if getattr(settings, 'AUTO_ACTIVATE_USER', False):
+            user.is_active = True
+            user.is_email_verified = True
+            user.save(update_fields=['is_active', 'is_email_verified'])
+            
+            # Message spécial pour production
+            return Response(
+                {'message': "Inscription réussie ! Votre compte a été activé automatiquement."},
+                status=status.HTTP_201_CREATED,
+            )
 
-        # Génération d'un code d'activation à 6 chiffres (OTP)
+        # Si pas d'auto-activation, on suit le flux normal (OTP)
         import random
         otp_code = "".join([str(random.randint(0, 9)) for _ in range(6)])
         user.activation_code = otp_code
         user.save(update_fields=['activation_code'])
 
-        # On tente d'envoyer l'e-mail avec le CODE
-        email_sent = True
-        try:
-            send_verification_email(user, otp_code)
-        except Exception as e:
-            # On ne lève pas d'erreur pour ne pas bloquer l'inscription.
-            # Le système WhatsApp prendra le relais.
-            email_sent = False
+        # Envoi e-mail conditionnel
+        email_sent = False
+        if getattr(settings, 'ENABLE_EMAILS', True):
+            try:
+                send_verification_email(user, otp_code)
+                email_sent = True
+            except Exception:
+                pass
 
-        # --- OPTIONNEL : Notification WhatsApp avec le CODE ---
+        # Envoi WhatsApp conditionnel
         whatsapp_sent = False
-        try:
-            phone = getattr(user, 'telephone', None) or request.data.get('telephone')
-            if phone:
-                clean_phone = "".join(filter(str.isdigit, str(phone)))
-                welcome_msg = (
-                    f"Bienvenue chez *HOPITEL* ! 🎉\n\n"
-                    f"Votre code d'activation est : *{otp_code}*\n\n"
-                    "Saisissez ce code dans l'application pour valider votre compte. "
-                )
-                if not email_sent:
-                    welcome_msg += "L'envoi de l'email a échoué. Heureusement, ce code WhatsApp est suffisant pour activer votre compte."
-                
-                send_whatsapp_message(clean_phone, welcome_msg)
-                whatsapp_sent = True
-        except Exception:
-            pass 
+        if getattr(settings, 'ENABLE_WHATSAPP', True):
+            try:
+                phone = getattr(user, 'telephone', None) or request.data.get('telephone')
+                if phone:
+                    clean_phone = "".join(filter(str.isdigit, str(phone)))
+                    welcome_msg = (
+                        f"Bienvenue chez *HOPITEL* ! 🎉\n\n"
+                        f"Votre code d'activation est : *{otp_code}*\n\n"
+                        "Saisissez ce code dans l'application pour valider votre compte."
+                    )
+                    send_whatsapp_message(clean_phone, welcome_msg)
+                    whatsapp_sent = True
+            except Exception:
+                pass 
 
         if not email_sent and not whatsapp_sent:
-            # Si les deux échouent, on avertit l'utilisateur (mais le compte est quand même créé)
+            # Si les deux échouent ou sont désactivés
             return Response(
-                {'message': "Inscription réussie ! Cependant, nous n'avons pas pu vous envoyer le code par email ou par WhatsApp. Veuillez contacter le support."},
+                {'message': "Inscription réussie ! Veuillez utiliser le code affiché ou contacter le support pour activer votre compte."},
                 status=status.HTTP_201_CREATED,
             )
 
         return Response(
-            {'message': "Inscription réussie ! Un email de confirmation a été envoyé à votre adresse. Veuillez vérifier votre boîte mail pour activer votre compte."},
+            {'message': "Inscription réussie ! Un code de confirmation vous a été envoyé pour activer votre compte."},
             status=status.HTTP_201_CREATED,
         )
 

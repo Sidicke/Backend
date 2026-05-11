@@ -162,6 +162,12 @@ WHATSAPP_SERVICE_URL = config('WHATSAPP_SERVICE_URL', default='http://localhost:
 # URL du backend (pour les liens de validation d'emails qui doivent ouvrir une page web sur le backend)
 BACKEND_URL = config('BACKEND_URL', default='http://localhost:8000')
 
+# ── Feature Toggles ──────────────────────────────────────────────────────
+# Pour désactiver les services externes en production (Render bloquant SMTP/WhatsApp)
+ENABLE_EMAILS = config('ENABLE_EMAILS', default=True, cast=bool)
+ENABLE_WHATSAPP = config('ENABLE_WHATSAPP', default=True, cast=bool)
+AUTO_ACTIVATE_USER = config('AUTO_ACTIVATE_USER', default=False, cast=bool)
+
 # CORS
 # En développement : tout autoriser. En production : lister les origines.
 CORS_ALLOW_ALL_ORIGINS = True

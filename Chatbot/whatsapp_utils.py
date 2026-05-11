@@ -10,9 +10,10 @@ WHATSAPP_SERVICE_URL = getattr(settings, 'WHATSAPP_SERVICE_URL', 'http://localho
 def send_whatsapp_message(phone, message):
     """
     Envoie un message WhatsApp via le microservice Node.js Baileys.
-    :param phone: Numéro de téléphone au format international (ex: 22991000000)
-    :param message: Contenu du message
     """
+    if not getattr(settings, 'ENABLE_WHATSAPP', True):
+        return {"success": False, "error": "WhatsApp disabled in configuration"}
+
     url = f"{WHATSAPP_SERVICE_URL}/send-message"
     payload = {
         "phone": phone,

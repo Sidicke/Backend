@@ -12,6 +12,9 @@ def generate_secure_token(user_pk):
 
 def send_verification_email(user, otp_code):
     """Envoie un email avec le code de vérification au patient inscrit."""
+    if not getattr(settings, 'ENABLE_EMAILS', True):
+        return
+
     html_message = render_to_string('accounts/emails/verification_email.html', {
         'user': user,
         'otp_code': otp_code,
@@ -29,6 +32,9 @@ def send_verification_email(user, otp_code):
 
 def send_account_created_email(user, password=None, reset_token=None):
     """Envoie un email avec les identifiants ou un lien de configuration de mot de passe lors de la création d'un compte admin."""
+    if not getattr(settings, 'ENABLE_EMAILS', True):
+        return
+
     context = {'user': user}
     if password:
         context['password'] = password
@@ -51,6 +57,9 @@ def send_account_created_email(user, password=None, reset_token=None):
 
 def send_password_reset_email(user, token):
     """Envoie un email de réinitialisation de mot de passe."""
+    if not getattr(settings, 'ENABLE_EMAILS', True):
+        return
+
     # Point vers la vue HTML hébergée sur le backend
     reset_url = f"{settings.BACKEND_URL}/api/accounts/reset-password/{token}/"
 
@@ -71,6 +80,9 @@ def send_password_reset_email(user, token):
 
 def send_appointment_request_email(rdv):
     """Envoie une notification au médecin lors d'une nouvelle demande de RDV."""
+    if not getattr(settings, 'ENABLE_EMAILS', True):
+        return
+
     context = {
         'rdv': rdv,
         'doctor_name': rdv.medecin.user.get_full_name(),
@@ -90,6 +102,9 @@ def send_appointment_request_email(rdv):
 
 def send_appointment_status_email(rdv):
     """Envoie une notification au patient lorsque le statut du RDV change (confirmé/refusé)."""
+    if not getattr(settings, 'ENABLE_EMAILS', True):
+        return
+
     context = {
         'rdv': rdv,
         'patient_name': rdv.patient.user.get_full_name(),
