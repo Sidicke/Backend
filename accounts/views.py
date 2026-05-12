@@ -63,23 +63,24 @@ class PatientRegisterView(generics.CreateAPIView):
                 status=status.HTTP_201_CREATED,
             )
 
-        # Si pas d'auto-activation, on suit le flux normal (OTP)
+        # Génération du code OTP
         import random
         otp_code = "".join([str(random.randint(0, 9)) for _ in range(6)])
         user.activation_code = otp_code
         user.save(update_fields=['activation_code'])
 
-        # Envoi e-mail conditionnel
-        email_sent = False
+        # --- ENVOI E-MAIL (BLOQUANT / TRANSACTIONNEL) ---
         if getattr(settings, 'ENABLE_EMAILS', True):
             try:
                 send_verification_email(user, otp_code)
-                email_sent = True
-            except Exception:
-                pass
+            except Exception as e:
+                # Si l'email échoue, on lève une erreur pour déclencher le ROLLBACK atomique
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({
+                    'error': f"Échec de l'envoi de l'email de vérification : {str(e)}. L'inscription a été annulée pour éviter les comptes fantômes."
+                })
 
-        # Envoi WhatsApp conditionnel
-        whatsapp_sent = False
+        # --- ENVOI WHATSAPP (NON-BLOQUANT POUR LE MOMENT) ---
         if getattr(settings, 'ENABLE_WHATSAPP', True):
             try:
                 phone = getattr(user, 'telephone', None) or request.data.get('telephone')
@@ -91,19 +92,12 @@ class PatientRegisterView(generics.CreateAPIView):
                         "Saisissez ce code dans l'application pour valider votre compte."
                     )
                     send_whatsapp_message(clean_phone, welcome_msg)
-                    whatsapp_sent = True
             except Exception:
+                # On ne bloque pas pour WhatsApp selon la demande actuelle
                 pass 
 
-        if not email_sent and not whatsapp_sent:
-            # Si les deux échouent ou sont désactivés
-            return Response(
-                {'message': "Inscription réussie ! Veuillez utiliser le code affiché ou contacter le support pour activer votre compte."},
-                status=status.HTTP_201_CREATED,
-            )
-
         return Response(
-            {'message': "Inscription réussie ! Un code de confirmation vous a été envoyé pour activer votre compte."},
+            {'message': "Inscription réussie ! Un code de confirmation vous a été envoyé par e-mail pour activer votre compte."},
             status=status.HTTP_201_CREATED,
         )
 
