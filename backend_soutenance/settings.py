@@ -152,6 +152,7 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@HOPITEL-benin.com')
+BREVO_API_KEY = config('BREVO_API_KEY', default='')
 
 # URL du frontend
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:8080')
