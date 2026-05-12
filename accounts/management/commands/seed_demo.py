@@ -52,9 +52,17 @@ class Command(BaseCommand):
                 'CNHU-HKM (Cotonou)', 'CHUD Porto-Novo', 'CHU Parakou', 'Hôpital de Zone (Calavi)',
                 # Anciens noms à supprimer pour éviter les doublons
                 'CHU de Cotonou', 'Hôpital de Zone de Porto-Novo', 'Hôpital de Zone de Parakou',
-                'Clinique Autonome d\'Abomey'
+                'Clinique Autonome d\'Abomey', 'CHUD Porto Novo', 'CHU de Parakou'
             ]
-            Hopital.objects.filter(nom__in=demo_hopitaux_noms).delete()
+            # Liste des codes courts susceptibles de collision
+            demo_codes = ['CC', 'CP', 'CP1', 'HDZC']
+            
+            # Suppression par nom (insensible à la casse et flexible) ou par code court
+            from django.db.models import Q
+            Hopital.objects.filter(
+                Q(nom__in=demo_hopitaux_noms) | 
+                Q(code_court__in=demo_codes)
+            ).delete()
 
             # Liste des emails de démo du README
             demo_emails = [

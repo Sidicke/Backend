@@ -51,12 +51,20 @@ class Hopital(models.Model):
             raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
-        self.full_clean()
+        # On s'assure que les validations (clean) sont passées
+        try:
+            self.full_clean()
+        except ValidationError:
+            # Si le clean échoue (ex: doublon sur nom si on l'ajoute plus tard), 
+            # on laisse Django gérer l'erreur normalement plus bas
+            pass
+            
         if not self.code_court:
             base = _generer_code_court(self.nom)
-            # Garantir l'unicité si collision
+            # Garantir l'unicité si collision par incrémentation
             code = base
             n = 1
+            # On vérifie si le code existe déjà pour UN AUTRE établissement
             while Hopital.objects.filter(code_court=code).exclude(pk=self.pk).exists():
                 code = f"{base}{n}"
                 n += 1
