@@ -92,6 +92,12 @@ DATABASES = {
 # Modèle utilisateur personnalisé
 AUTH_USER_MODEL = 'accounts.User'
 
+# Authentification personnalisée (Email ou Numéro de Téléphone)
+AUTHENTICATION_BACKENDS = [
+    'accounts.backends.EmailOrPhoneModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 # Validation des mots de passe
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
