@@ -65,7 +65,12 @@ class Hopital(models.Model):
             code = base
             n = 1
             # On vérifie si le code existe déjà pour UN AUTRE établissement
-            while Hopital.objects.filter(code_court=code).exclude(pk=self.pk).exists():
+            while True:
+                qs = Hopital.objects.filter(code_court=code)
+                if self.pk:
+                    qs = qs.exclude(pk=self.pk)
+                if not qs.exists():
+                    break
                 code = f"{base}{n}"
                 n += 1
             self.code_court = code
