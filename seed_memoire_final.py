@@ -180,7 +180,7 @@ def run():
             # Pour certains terminés, on génère une Demande d'analyse au labo
             if random.choice([True, False]):
                 DemandeAnalyse.objects.create(
-                    hopital=m.hopital,
+                    hopital=m.user.hopital,
                     laborantin=u_lab,
                     patient=p,
                     patient_nom=p.user.last_name,

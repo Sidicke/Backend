@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "443803409268",
+    "project_id": "soutenance-f1f78",
+    "storage_bucket": "soutenance-f1f78.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:443803409268:android:83b3dd4b0b491ba9566a21",
+        "android_client_info": {
+          "package_name": "com.hopitel.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAY7sbufn_bEK5THyYgvB8xXyRybvTZY-0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
