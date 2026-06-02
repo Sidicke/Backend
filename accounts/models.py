@@ -38,7 +38,7 @@ class User(AbstractUser):
     adresse = models.TextField('adresse', blank=True, default='')
     photo = models.ImageField('photo de profil', upload_to='photos_profil/', blank=True, null=True)
     is_email_verified = models.BooleanField('email vérifié', default=False)
-    activation_code = models.CharField('code d\'activation', max_length=6, blank=True, default='')
+    activation_code = models.CharField('code_activation', max_length=6, blank=True, null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name', 'telephone', 'sexe']
@@ -72,6 +72,7 @@ class Patient(models.Model):
     contact_urgence_tel = models.CharField("téléphone du contact d'urgence", max_length=20)
     groupe_sanguin = models.CharField('groupe sanguin', max_length=5, choices=GroupeSanguin.choices, blank=True, default='')
     allergies = models.TextField('allergies', blank=True, default='')
+    npi = models.CharField('NPI', max_length=20, unique=True, blank=True, null=True, help_text="Numéro Personnel d'Identification (Bénin)")
     numero_secu = models.CharField('numéro de sécurité sociale', max_length=50, blank=True, default='')
 
     class Meta:

@@ -17,15 +17,32 @@ class ConversationListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        from django.db.models import Subquery, OuterRef, Count, Value, CharField
+        from django.db.models.functions import Substr
         user = request.user
         conversations = []
 
         # ─── 1. Conversations liées aux consultations ───────────────────
-        # Récupérer toutes les consultations où l'utilisateur est participant
         from rendezvous.models import Consultation
+
+        # Sous-requête : dernier message de chaque consultation
+        latest_msg_subquery = Message.objects.filter(
+            consultation_id=OuterRef('pk')
+        ).order_by('-date_envoi')
+
         consultations_qs = Consultation.objects.select_related(
             'rendez_vous__patient__user',
             'rendez_vous__medecin__user',
+        ).annotate(
+            last_msg_contenu=Subquery(latest_msg_subquery.values('contenu')[:1]),
+            last_msg_date=Subquery(latest_msg_subquery.values('date_envoi')[:1]),
+            non_lus=Count(
+                'rendez_vous__consultation__messages',
+                filter=Q(
+                    rendez_vous__consultation__messages__destinataire=user,
+                    rendez_vous__consultation__messages__lu=False,
+                ),
+            ),
         )
 
         if user.role == 'patient':
@@ -41,20 +58,8 @@ class ConversationListView(APIView):
                 Q(rendez_vous__patient__user=user) | Q(rendez_vous__medecin__user=user)
             )
 
-        for consultation in consultations_qs:
-            rdv = consultation.rendez_vous
-            # Dernier message de cette consultation
-            dernier_msg = Message.objects.filter(
-                consultation=consultation
-            ).order_by('-date_envoi').first()
-
-            non_lus = Message.objects.filter(
-                consultation=consultation,
-                destinataire=user,
-                lu=False,
-            ).count()
-
-            # Déterminer le destinataire (l'autre partie)
+        for c in consultations_qs:
+            rdv = c.rendez_vous
             if user.pk == rdv.patient.user_id:
                 dest_id = rdv.medecin.user_id
                 titre = f"Consultation avec Dr. {rdv.medecin.user.last_name}"
@@ -63,20 +68,29 @@ class ConversationListView(APIView):
                 titre = f"Patient {rdv.patient.user.get_full_name()}"
 
             conversations.append({
-                'consultation_id': consultation.pk,
+                'consultation_id': c.pk,
                 'destinataire_id': dest_id,
                 'titre': titre,
-                'dernier_message': dernier_msg.contenu[:100] if dernier_msg else '',
-                'date_dernier_message': dernier_msg.date_envoi if dernier_msg else consultation.date_consultation,
-                'non_lus': non_lus,
+                'dernier_message': (c.last_msg_contenu or '')[:100],
+                'date_dernier_message': c.last_msg_date or c.date_consultation,
+                'non_lus': c.non_lus or 0,
                 'type': 'consultation',
-                'est_cloture': consultation.est_cloture,
+                'est_cloture': c.est_cloture,
             })
 
         # ─── 2. Messages directs (hors consultation) ───────────────────
         direct_msgs = Message.objects.filter(
             (Q(expediteur=user) | Q(destinataire=user)) & Q(consultation__isnull=True)
         ).select_related('expediteur', 'destinataire').order_by('-date_envoi')
+
+        # Pré-calculer les comptages de non-lus par pair (1 seule requête)
+        unread_counts = dict(
+            Message.objects.filter(
+                consultation__isnull=True,
+                destinataire=user,
+                lu=False,
+            ).values_list('expediteur').annotate(cnt=Count('id')).values_list('expediteur', 'cnt')
+        )
 
         visited_peers = set()
         for msg in direct_msgs:
@@ -85,20 +99,13 @@ class ConversationListView(APIView):
                 continue
             visited_peers.add(peer.pk)
 
-            non_lus = Message.objects.filter(
-                consultation__isnull=True,
-                expediteur=peer,
-                destinataire=user,
-                lu=False,
-            ).count()
-
             conversations.append({
                 'consultation_id': None,
                 'destinataire_id': peer.pk,
                 'titre': peer.get_full_name(),
                 'dernier_message': msg.contenu[:100],
                 'date_dernier_message': msg.date_envoi,
-                'non_lus': non_lus,
+                'non_lus': unread_counts.get(peer.pk, 0),
                 'type': 'direct',
                 'est_cloture': False,
             })

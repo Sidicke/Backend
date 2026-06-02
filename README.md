@@ -1,55 +1,29 @@
-# HOPITEL — Backend
+# E-Santé Bénin — Backend (HOPITEL)
 
 ## Administration Initiale
 
-Une fois la base de données initialisée, vous pouvez vous connecter avec le compte administrateur général par défaut.
+Une fois la base de données initialisée, vous pouvez vous connecter avec le compte administrateur général.
 
 **Identifiants par défaut :**
 
 | Champ | Valeur |
 |-------|--------|
-| **Email** | `admin@HOPITEL-benin.com` |
-| **Mot de passe** | `HOPITEL2025!` |
+| **Email** | `admin@hopitel.com` |
+| **Mot de passe** | `HopitelAdmin2025*` |
 
 > [!IMPORTANT]
-> Il est fortement recommandé de changer ce mot de passe dès la première connexion via l'interface d'administration ou le profil.
+> En mode Soutenance, toutes les notifications sont redirigées vers l'auteur.
 
-## Initialisation des données (Seed)
+## Initialisation des données (Seed Final)
 
-Le script de seed permet d'initialiser rapidement l'environnement.
+Pour une démonstration complète et réaliste (Mémoire), utilisez le script suivant :
 
 ```bash
-# 1. Pour une installation PROPRE (Super Admin + Services de base)
-python manage.py seed --clean
-
-# 2. Pour une DÉMONSTRATION COMPLÈTE (Hôpitaux, Médecins, Patients, RDV, Analyses, Messages)
-python manage.py seed_demo --clean
+python seed_memoire_final.py
 ```
 
 ## Comptes de Démonstration (Soutenance)
 
-Tous les comptes ci-dessous utilisent le mot de passe unique : **`HOPITEL2025!`**
-
-### 🏢 Administration & Gestion
-| Rôle | Email | Zone / Hôpital |
-|------|-------|----------------|
-| **Admin Général** | `admin@HOPITEL-benin.com` | Tous les sites (Super Admin) |
-| **Admin CNHU** | `admin.cnhu@HOPITEL.com` | CNHU-HKM (Cotonou) |
-| **Admin CHUD** | `admin.chud@HOPITEL.com` | CHUD Porto-Novo |
-| **Admin Parakou** | `admin.parakou@HOPITEL.com` | CHU Parakou |
-| **Admin Calavi** | `admin.calavi@HOPITEL.com` | Hôpital de Zone (Calavi) |
-
-### 👨‍⚕️ Corps Médical (Liste Intégrale des 12 médecins)
-| Médecin | Email | Spécialité | Hôpital |
-|---------|-------|------------|---------|
-| **Dr. Jean DOSSOU** | `dossou@HOPITEL.com` | Cardiologie | CNHU-HKM |
-| **Dr. Marie TOSSOU** | `tossou@HOPITEL.com` | Pédiatrie | CNHU-HKM |
-| **Dr. Alain GNONLONFOUN** | `gnonlonfoun@HOPITEL.com` | Gynécologie | CNHU-HKM |
-| **Dr. Marc HOUESSOU** | `houessou@HOPITEL.com` | Pédiatrie | CHUD Porto-Novo |
-| **Dr. Sophie AGOSSOU** | `agossou@HOPITEL.com` | Neurologie | CHUD Porto-Novo |
-| **Dr. Basile ZANNOU** | `zannou@HOPITEL.com` | Pédiatrie | CHUD Porto-Novo |
-| **Dr. Yacoubou BIO** | `bio@HOPITEL.com` | Chirurgie Générale | CHU Parakou |
-| **Dr. Félicien SIKA** | `sika@HOPITEL.com` | Ophtalmologie | CHU Parakou |
 | **Dr. Saidou MAMA** | `mama@HOPITEL.com` | Chirurgie Générale | CHU Parakou |
 | **Dr. René KODJO** | `kodjo@HOPITEL.com` | Gynécologie | HZ Calavi |
 | **Dr. Pierrette SOSSA** | `sossa@HOPITEL.com` | Gynécologie | HZ Calavi |

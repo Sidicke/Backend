@@ -6,13 +6,12 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.http import HttpResponse
 from django.utils.crypto import get_random_string
-from rest_framework import generics, status, filters, serializers
+from rest_framework import generics, status, filters
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.views import View
-from notifications.utils import create_notification
 
 from .models import Patient, Medecin, Laborantin
 from .permissions import IsAdminGeneral, IsAdminGeneralOrAdminHopital
@@ -36,17 +35,20 @@ User = get_user_model()
 # Inscription et vérification email
 # ──────────────────────────────────────────────
 
-from django.db import transaction
-
 class PatientRegisterView(generics.CreateAPIView):
     """Inscription d'un nouveau patient."""
 
     serializer_class = PatientRegisterSerializer
     permission_classes = [AllowAny]
 
+    from django.db import transaction
+
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         from django.conf import settings
+        import logging
+        logger = logging.getLogger(__name__)
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -69,49 +71,86 @@ class PatientRegisterView(generics.CreateAPIView):
         user.activation_code = otp_code
         user.save(update_fields=['activation_code'])
 
-        # --- ENVOI E-MAIL (BLOQUANT / TRANSACTIONNEL) ---
-        if getattr(settings, 'ENABLE_EMAILS', True):
-            try:
-                send_verification_email(user, otp_code)
-            except Exception as e:
-                # Si l'email échoue, on lève une erreur pour déclencher le ROLLBACK atomique
-                from rest_framework.exceptions import ValidationError
-                raise ValidationError({
-                    'error': f"Échec de l'envoi de l'email de vérification : {str(e)}. L'inscription a été annulée pour éviter les comptes fantômes."
-                })
+        # ── DIFFUSION MULTI-CANAL ──────────────────────────────────────────
+        # On envoie le code OTP par TOUS les canaux disponibles en même temps.
+        # Si un canal échoue, les autres continuent. Si AUCUN canal externe
+        # ne fonctionne, l'inscription passe quand même (notification in-app).
+        canaux_ok = []
 
-        # --- ENVOI WHATSAPP (NON-BLOQUANT POUR LE MOMENT) ---
+        # 1. WHATSAPP
         if getattr(settings, 'ENABLE_WHATSAPP', True):
             try:
                 phone = getattr(user, 'telephone', None) or request.data.get('telephone')
                 if phone:
                     clean_phone = "".join(filter(str.isdigit, str(phone)))
+                    if len(clean_phone) == 8:
+                        clean_phone = f"229{clean_phone}"
+                    
                     welcome_msg = (
                         f"Bienvenue chez *HOPITEL* ! 🎉\n\n"
                         f"Votre code d'activation est : *{otp_code}*\n\n"
                         "Saisissez ce code dans l'application pour valider votre compte."
                     )
-                    send_whatsapp_message(clean_phone, welcome_msg)
-            except Exception:
-                # On ne bloque pas pour WhatsApp selon la demande actuelle
-                pass 
+                    result = send_whatsapp_message(clean_phone, welcome_msg)
+                    if result and result.get('success'):
+                        canaux_ok.append('whatsapp')
+                        logger.info(f"[NOTIF] OTP envoyé par WhatsApp à {clean_phone}")
+            except Exception as e:
+                logger.warning(f"[NOTIF] Échec WhatsApp pour {user.email}: {e}")
+
+        # 2. EMAIL
+        if getattr(settings, 'ENABLE_EMAILS', True):
+            try:
+                send_verification_email(user, otp_code)
+                canaux_ok.append('email')
+                logger.info(f"[NOTIF] OTP envoyé par Email à {user.email}")
+            except Exception as e:
+                logger.warning(f"[NOTIF] Échec Email pour {user.email}: {e}")
+
+        # 3. IN-APP (toujours garanti via la notification Django Channels)
+        canaux_ok.append('app')
+
+        # Si aucun canal externe n'a fonctionné, on log un avertissement
+        if canaux_ok == ['app']:
+            logger.warning(
+                f"[NOTIF] Aucun canal externe disponible pour {user.email}. "
+                f"Le code OTP ({otp_code}) sera accessible uniquement via la messagerie interne."
+            )
+
+        # ── MESSAGE DE RÉPONSE ─────────────────────────────────────────────
+        if 'whatsapp' in canaux_ok and 'email' in canaux_ok:
+            msg = "Inscription réussie ! Votre code de confirmation a été envoyé par WhatsApp et par email."
+        elif 'whatsapp' in canaux_ok:
+            msg = "Inscription réussie ! Un code de confirmation vous a été envoyé sur WhatsApp."
+        elif 'email' in canaux_ok:
+            msg = "Inscription réussie ! Un code de confirmation vous a été envoyé par email."
+        else:
+            msg = "Inscription réussie ! Votre code d'activation vous sera transmis via la messagerie de l'application."
 
         return Response(
-            {'message': "Inscription réussie ! Un code de confirmation vous a été envoyé par e-mail pour activer votre compte."},
+            {
+                'message': msg,
+                'canaux': canaux_ok,
+            },
             status=status.HTTP_201_CREATED,
         )
 
 
 from django.shortcuts import render
 
-
 class ActivateByCodeView(APIView):
     """Vérification de l'adresse email via le code à 6 chiffres (OTP)."""
     permission_classes = [AllowAny]
 
     def post(self, request):
-        email = request.data.get('email')
-        code = request.data.get('code')
+        email = request.data.get('email', '')
+        # Normalisation indispensable pour éviter les espaces et majuscules indésirables envoyés par l'app mobile
+        if email:
+            email = email.strip().lower()
+            
+        code = request.data.get('code', '')
+        if code:
+            code = str(code).strip()
 
         if not email or not code:
             return Response({'error': "L'email et le code sont requis."}, status=status.HTTP_400_BAD_REQUEST)
@@ -119,7 +158,7 @@ class ActivateByCodeView(APIView):
         try:
             user = User.objects.get(email=email, activation_code=code)
         except User.DoesNotExist:
-            return Response({'error': "Code de validation incorrect ou email invalide."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': f"Code de validation incorrect ou email invalide pour {email}."}, status=status.HTTP_400_BAD_REQUEST)
 
         if user.is_active and user.is_email_verified:
             return Response({'message': "Compte déjà activé."}, status=status.HTTP_200_OK)
@@ -137,7 +176,15 @@ class ActivateByCodeView(APIView):
             message=f"Bienvenue {user.first_name} ! Votre compte a été activé avec succès sur HOPITEL.",
         )
 
-        return Response({'message': "Votre compte a été activé avec succès. Vous pouvez maintenant vous connecter."}, status=status.HTTP_200_OK)
+        # Génération des tokens JWT pour auto-login
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            'message': "Votre compte a été activé avec succès. Vous êtes maintenant connecté.",
+            'access': str(refresh.access_token),
+            'refresh': str(refresh)
+        }, status=status.HTTP_200_OK)
 
 # ──────────────────────────────────────────────
 # Réinitialisation de mot de passe
@@ -161,12 +208,19 @@ class RequestPasswordResetView(APIView):
             try:
                 send_password_reset_email(user, token)
             except Exception:
+                pass
+                
+            from accounts.utils import send_password_reset_whatsapp
+            result = send_password_reset_whatsapp(user, token)
+            
+            if result and not result.get('success'):
                 return Response(
-                    {'error': "Erreur Gmail : Impossible d'envoyer l'e-mail. Vérifiez la configuration SMTP."},
+                    {'error': "Votre numéro n'a pas de WhatsApp pour recevoir le lien de réinitialisation."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+            
             return Response(
-                {'message': "Un lien de réinitialisation vous a été envoyé par e-mail."},
+                {'message': "Un lien de réinitialisation vous a été envoyé sur WhatsApp."},
                 status=status.HTTP_200_OK,
             )
         except User.DoesNotExist:
@@ -296,26 +350,12 @@ class MedecinListCreateView(generics.ListCreateAPIView):
         token = generate_secure_token(medecin.user.pk)
         send_account_created_email(medecin.user, reset_token=token)
 
+        from notifications.utils import create_notification
         create_notification(
             user=medecin.user,
             type='compte_cree',
-            message=f"Bienvenue Dr. {medecin.user.last_name} ! Votre compte médecin a été créé sur HOPITEL.",
+            message=f"Bienvenue Dr. {medecin.user.last_name} ! Votre compte médecin a été créé.",
         )
-
-        # Envoi des identifiants par WhatsApp
-        try:
-            phone = medecin.user.telephone
-            if phone:
-                clean_phone = "".join(filter(str.isdigit, str(phone)))
-                creds_msg = (
-                    f"Bonjour Dr. {medecin.user.last_name}, bienvenue chez *HOPITEL* ! 👩‍⚕️👨‍⚕️\n\n"
-                    f"Votre compte médecin a été créé.\n"
-                    f"Identifiant : *{medecin.user.email}*\n\n"
-                    "Un email vous a été envoyé pour configurer votre mot de passe."
-                )
-                send_whatsapp_message(clean_phone, creds_msg)
-        except Exception:
-            pass
 
 
 class MedecinDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -412,30 +452,12 @@ class LaborantinListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         laborantin = serializer.save()
         
-        # Envoi de l'email pour configuration du mot de passe
-        token = generate_secure_token(laborantin.user.pk)
-        send_account_created_email(laborantin.user, reset_token=token)
-
+        from notifications.utils import create_notification
         create_notification(
             user=laborantin.user,
             type='compte_cree',
-            message=f"Bienvenue {laborantin.user.first_name} ! Votre compte laborantin a été créé sur HOPITEL.",
+            message=f"Bienvenue {laborantin.user.first_name} ! Votre compte laborantin a été créé.",
         )
-
-        # Envoi des identifiants par WhatsApp
-        try:
-            phone = laborantin.user.telephone
-            if phone:
-                clean_phone = "".join(filter(str.isdigit, str(phone)))
-                creds_msg = (
-                    f"Bonjour {laborantin.user.first_name}, bienvenue chez *HOPITEL* ! 🔬\n\n"
-                    f"Votre compte laborantin a été créé.\n"
-                    f"Identifiant : *{laborantin.user.email}*\n\n"
-                    "Un email vous a été envoyé pour configurer votre mot de passe."
-                )
-                send_whatsapp_message(clean_phone, creds_msg)
-        except Exception:
-            pass
 
 
 class LaborantinDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -530,32 +552,13 @@ class AdminHopitalListCreateView(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         user = serializer.save()
-        
-        # Envoi de l'email pour configuration du mot de passe
-        token = generate_secure_token(user.pk)
-        send_account_created_email(user, reset_token=token)
 
         from notifications.utils import create_notification
         create_notification(
             user=user,
             type='compte_cree',
-            message=f"Bienvenue {user.first_name} ! Votre compte administrateur d'hôpital a été créé sur HOPITEL.",
+            message=f"Bienvenue {user.first_name} ! Votre compte administrateur d'hôpital a été créé.",
         )
-
-        # Envoi des identifiants par WhatsApp
-        try:
-            phone = user.telephone
-            if phone:
-                clean_phone = "".join(filter(str.isdigit, str(phone)))
-                creds_msg = (
-                    f"Bonjour {user.first_name}, bienvenue chez *HOPITEL* ! 🏢\n\n"
-                    f"Votre compte Administrateur Hôpital a été créé.\n"
-                    f"Identifiant : *{user.email}*\n\n"
-                    "Un email vous a été envoyé pour configurer votre mot de passe."
-                )
-                send_whatsapp_message(clean_phone, creds_msg)
-        except Exception:
-            pass
 
 
 class AdminHopitalDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -656,6 +659,9 @@ class MedecinCSVImportView(APIView):
                 )
 
                 send_account_created_email(user, password)
+                from accounts.utils import send_account_created_whatsapp
+                send_account_created_whatsapp(user, password)
+                
                 resultats['crees'] += 1
 
             except Exception as e:
@@ -685,3 +691,16 @@ class MedecinCSVTemplateView(APIView):
         ])
 
         return response
+
+# ──────────────────────────────────────────────
+# Token JWT Personnalisé (Resté Connecté)
+# ──────────────────────────────────────────────
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import CustomTokenObtainPairSerializer
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    """
+    Génère un token JWT. Supporte le 'stay_logged_in' (30 jours) 
+    et inclut les infos de base de l'utilisateur.
+    """
+    serializer_class = CustomTokenObtainPairSerializer

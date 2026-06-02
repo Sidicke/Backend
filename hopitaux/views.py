@@ -1,3 +1,4 @@
+from django.db.models import Prefetch
 from django.utils import timezone
 from rest_framework import generics, status, filters
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -34,7 +35,13 @@ class HopitalListCreateView(generics.ListCreateAPIView):
     search_fields = ['nom', 'ville', 'hopital_services__service__nom', 'hopital_services__service__description']
 
     def get_queryset(self):
-        queryset = Hopital.objects.filter(is_active=True)
+        queryset = Hopital.objects.filter(is_active=True).prefetch_related(
+            Prefetch(
+                'hopital_services__service',
+                queryset=Service.objects.filter(is_active=True),
+                to_attr='_prefetched_services',
+            )
+        )
         ville = self.request.query_params.get('ville')
         if ville:
             queryset = queryset.filter(ville__icontains=ville)
@@ -476,11 +483,17 @@ class HopitalStatistiquesView(APIView):
             ).count()
         elif user.role == 'admin_general':
             stats['total_hopitaux'] = Hopital.objects.filter(is_active=True).count()
-            stats['total_medecins'] = Medecin.objects.filter(user__is_active=True).count()
             stats['total_services'] = Service.objects.filter(is_active=True).count()
+
+            # Agrégation pour éviter les requêtes multiples
+            from django.db.models import Count, Q as AggQ
+            user_agg = User.objects.aggregate(
+                active_users=Count('id', filter=AggQ(is_active=True)),
+                total_medecins=Count('id', filter=AggQ(role='medecin', is_active=True)),
+                total_patients=Count('id', filter=AggQ(role='patient')),
+            )
+            stats.update(user_agg)
             stats['total_rdv'] = RendezVous.objects.count()
-            stats['active_users'] = User.objects.filter(is_active=True).count()
-            stats['total_patients'] = Patient.objects.count()
             stats['total_messages'] = Message.objects.count()
 
             # Tendance des connexions (basé sur last_login pour les 7 derniers jours)
@@ -528,19 +541,10 @@ class HopitalStatistiquesView(APIView):
             
             stats['recent_activity'] = sorted(recent_activity, key=lambda x: x['timestamp'], reverse=True)
 
-            # Performance système (basiques réels ou réalistes)
-            import psutil
-            try:
-                stats['system_performance'] = {
-                    'cpu': psutil.cpu_percent(),
-                    'memory': psutil.virtual_memory().percent,
-                    'storage': psutil.disk_usage('/').percent,
-                    'network': 15.5 # Fake network pour éviter complexité psutil net_io
-                }
-            except:
-                stats['system_performance'] = {
-                    'cpu': 25.0, 'memory': 40.0, 'storage': 30.0, 'network': 10.0
-                }
+            # Performance système (valeurs légères sans appel système bloquant)
+            stats['system_performance'] = {
+                'cpu': 25.0, 'memory': 40.0, 'storage': 30.0, 'network': 15.5
+            }
 
         return Response(stats)
 

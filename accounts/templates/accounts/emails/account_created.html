@@ -21,11 +21,11 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>HOPITEL</h1>
+            <h1>E-Santé Bénin</h1>
         </div>
         <div class="content">
             <h2>Bienvenue Dr {{ user.last_name|default:user.first_name }},</h2>
-            <p>Un administrateur vient de créer votre compte professionnel sur la plateforme <strong>HOPITEL</strong>.</p>
+            <p>Un administrateur vient de créer votre compte professionnel sur la plateforme <strong>E-Santé Bénin</strong>.</p>
             
             {% if password %}
                 <p>Voici vos informations d'identification temporaires. Pour des raisons de sécurité, nous vous recommandons de modifier ce mot de passe dès votre première connexion.</p>
@@ -47,10 +47,10 @@
                 </p>
             {% endif %}
             
-            <p>Si vous avez des questions, n'hésitez pas à contacter votre administrateur d'hôpital ou le support d'HOPITEL.</p>
+            <p>Si vous avez des questions, n'hésitez pas à contacter votre administrateur d'hôpital ou le support d'E-Santé Bénin.</p>
         </div>
         <div class="footer">
-            <p>&copy; {% now "Y" %} HOPITEL. Tous droits réservés.</p>
+            <p>&copy; {% now "Y" %} E-Santé Bénin. Tous droits réservés.</p>
             <p>Ceci est un message automatique de création de profil sécurisé.</p>
         </div>
     </div>

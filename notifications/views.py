@@ -3,8 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Notification
-from .serializers import NotificationSerializer
+from .models import Notification, FCMDevice
+from .serializers import NotificationSerializer, FCMDeviceSerializer
 
 
 class NotificationListView(generics.ListAPIView):
@@ -60,4 +60,21 @@ class NotificationMarkAllReadView(APIView):
         return Response(
             {'message': f'{count} notification(s) marquée(s) comme lue(s).'},
             status=status.HTTP_200_OK,
+        )
+
+
+class FCMDeviceRegisterView(generics.CreateAPIView):
+    """Enregistrer un appareil FCM pour l'utilisateur connecté."""
+    serializer_class = FCMDeviceSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        registration_id = serializer.validated_data['registration_id']
+        FCMDevice.objects.update_or_create(
+            registration_id=registration_id,
+            defaults={
+                'user': self.request.user,
+                'device_id': serializer.validated_data.get('device_id'),
+                'active': True
+            }
         )

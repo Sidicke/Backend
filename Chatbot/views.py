@@ -1,5 +1,6 @@
 import re
 import json
+from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -8,6 +9,31 @@ from accounts.models import Patient
 from .models import ChatSession, ChatMessage
 from .serializers import ChatMessageSerializer, SendMessageSerializer
 from .services import openai_chat_completion
+from .whatsapp_utils import format_whatsapp_phone, send_whatsapp_message as _send_wa
+
+
+class WhatsAppDebugView(APIView):
+    """
+    Endpoint de diagnostic : trace le numéro formaté et appelle réellement le service.
+    POST /api/chatbot/whatsapp-debug/  { "phone": "0197XXXXXX", "message": "Test" }
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        raw_phone = request.data.get('phone', '')
+        message = request.data.get('message', 'Test HOPITEL debug')
+
+        formatted = format_whatsapp_phone(raw_phone)
+        wa_url = getattr(settings, 'WHATSAPP_SERVICE_URL', 'http://localhost:3001')
+
+        result = _send_wa(raw_phone, message)
+
+        return Response({
+            'phone_brut': raw_phone,
+            'phone_formate': formatted,
+            'whatsapp_service_url': wa_url,
+            'reponse_service': result,
+        })
 
 def extract_actions_and_clean_message(content):
     """

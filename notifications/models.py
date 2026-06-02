@@ -38,3 +38,24 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"[{self.get_type_display()}] {self.user.email} - {self.message[:50]}"
+
+
+class FCMDevice(models.Model):
+    """Stocke les jetons FCM des appareils mobiles des utilisateurs."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='fcm_devices'
+    )
+    registration_id = models.TextField('Registration ID')
+    device_id = models.CharField('Device ID', max_length=255, null=True, blank=True)
+    active = models.BooleanField('Actif', default=True)
+    date_created = models.DateTimeField('Date de création', auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Appareil FCM'
+        verbose_name_plural = 'Appareils FCM'
+        unique_together = ('user', 'registration_id')
+
+    def __str__(self):
+        return f"{self.user.email} - {self.registration_id[:20]}..."

@@ -147,7 +147,7 @@ class RendezVousListCreateView(generics.ListCreateAPIView):
         user = self.request.user
         queryset = RendezVous.objects.select_related(
             'patient__user', 'medecin__user', 'pre_enregistrement'
-        )
+        ).prefetch_related('consultation')
 
         if user.role == 'patient':
             queryset = queryset.filter(patient__user=user)
@@ -204,7 +204,7 @@ class RendezVousListCreateView(generics.ListCreateAPIView):
 class RendezVousDetailView(generics.RetrieveAPIView):
     """Détail d'un rendez-vous."""
 
-    queryset = RendezVous.objects.select_related('patient__user', 'medecin__user')
+    queryset = RendezVous.objects.select_related('patient__user', 'medecin__user').prefetch_related('consultation')
     serializer_class = RendezVousSerializer
     permission_classes = [IsAuthenticated, IsRendezVousParticipant]
 

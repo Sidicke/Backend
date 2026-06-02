@@ -265,6 +265,11 @@ class Command(BaseCommand):
             defaults={'laboratoire': 'CNHU Cotonou'}
         )
 
+        # ── 5. NOTIFICATIONS (Pour illustrations) ─────────────────────────────────
+        create_notification(p_sidicke, 'rappel_rdv', 'Rappel : Vous avez un rendez-vous demain avec le Dr. DOSSOU à 10h00.', lien=f"/api/rendezvous/{rdv_sid.id}/")
+        create_notification(p_claire, 'resultat_analyse', 'Vos résultats d\'analyses (Glycémie) sont disponibles. Veuillez les consulter.', lien="/api/resultats/1/")
+        create_notification(dr_dossou.user, 'nouveau_message', 'Vous avez reçu un nouveau message de Sidicke TRAORE.', lien=f"/api/consultations/{cons.pk}/")
+
         self._sep()
         self.stdout.write(self.style.SUCCESS('[DEMO] Seed fini ! Les 4 hôpitaux ont tous des services. 🎉'))
 

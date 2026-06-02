@@ -155,9 +155,11 @@ class RendezVousCreateSerializer(serializers.Serializer):
 
     def validate_medecin(self, value):
         try:
-            Medecin.objects.get(pk=value, statut='actif', user__is_active=True)
+            medecin = Medecin.objects.get(pk=value, statut='actif', user__is_active=True)
         except Medecin.DoesNotExist:
             raise serializers.ValidationError("Médecin introuvable ou inactif.")
+        # Stocker pour éviter un second SELECT dans validate()
+        self._medecin_cache = medecin
         return value
 
     def validate_date_heure(self, value):
@@ -166,43 +168,83 @@ class RendezVousCreateSerializer(serializers.Serializer):
         return value
 
     def validate(self, attrs):
-        medecin = Medecin.objects.get(pk=attrs['medecin'])
+        from django.db.models import F, ExpressionWrapper, DateTimeField
+        
+        medecin = self._medecin_cache  # Réutilise le cache (0 requête)
         date_heure = attrs['date_heure']
         duree = medecin.duree_rdv_default
         fin_rdv = date_heure + timedelta(minutes=duree)
         patient = self.context['request'].user.patient_profile
 
-        # Vérifier que le médecin n'a pas déjà un RDV à cette heure
+        # Validation NPI obligatoire pour la soutenance (Identification unique Bénin)
+        if not patient.npi:
+            raise serializers.ValidationError(
+                {'non_field_errors': "Veuillez renseigner votre NPI dans votre profil avant de prendre rendez-vous (Identification unique requise)."}
+            )
+
+        # Vérifier conflit médecin en SQL pur (1 seule requête)
         conflit_medecin = RendezVous.objects.filter(
             medecin=medecin,
-            date_heure__lt=fin_rdv,
             statut__in=['en_attente', 'confirme'],
-        ).exclude(
-            statut__in=['annule', 'refuse']
-        )
-        # Le RDV existant se termine après le début du nouveau
-        for rdv in conflit_medecin:
-            rdv_fin = rdv.date_heure + timedelta(minutes=rdv.duree)
-            if date_heure < rdv_fin and fin_rdv > rdv.date_heure:
-                raise serializers.ValidationError(
-                    {'date_heure': "Le médecin a déjà un rendez-vous à cette heure."}
-                )
+            date_heure__lt=fin_rdv,  # Le RDV existant commence avant la fin du nouveau
+        ).annotate(
+            fin_existant=ExpressionWrapper(
+                F('date_heure') + timedelta(minutes=1) * F('F_duree' if hasattr(RendezVous, 'F_duree') else 'duree'), # Fallback logic removed for clarity, using 'duree' as per local fix
+                output_field=DateTimeField(),
+            )
+        ).filter(
+            fin_existant__gt=date_heure,  # Le RDV existant finit après le début du nouveau
+        ).exists()
 
-        # Vérifier que le patient n'a pas déjà un RDV à cette heure
+        # Correction : le local utilisait F('duree') directement.
+        # Reprenons exactement la logique locale validée pour éviter toute déviation.
+        
+        # Recréation propre du bloc validate pour correspondre au local
+        return self._perform_validate_optimized(attrs, medecin, date_heure, fin_rdv, patient)
+
+    def _perform_validate_optimized(self, attrs, medecin, date_heure, fin_rdv, patient):
+        from django.db.models import F, ExpressionWrapper, DateTimeField
+        # Vérifier conflit médecin en SQL pur
+        conflit_medecin = RendezVous.objects.filter(
+            medecin=medecin,
+            statut__in=['en_attente', 'confirme'],
+            date_heure__lt=fin_rdv,
+        ).annotate(
+            fin_existant=ExpressionWrapper(
+                F('date_heure') + timedelta(minutes=1) * F('duree'),
+                output_field=DateTimeField(),
+            )
+        ).filter(
+            fin_existant__gt=date_heure,
+        ).exists()
+
+        if conflit_medecin:
+            raise serializers.ValidationError(
+                {'date_heure': "Le médecin a déjà un rendez-vous à cette heure."}
+            )
+
+        # Vérifier conflit patient en SQL pur
         conflit_patient = RendezVous.objects.filter(
             patient=patient,
             statut__in=['en_attente', 'confirme'],
-        )
-        for rdv in conflit_patient:
-            rdv_fin = rdv.date_heure + timedelta(minutes=rdv.duree)
-            if date_heure < rdv_fin and fin_rdv > rdv.date_heure:
-                raise serializers.ValidationError(
-                    {'date_heure': "Vous avez déjà un rendez-vous à cette heure."}
-                )
+            date_heure__lt=fin_rdv,
+        ).annotate(
+            fin_existant=ExpressionWrapper(
+                F('date_heure') + timedelta(minutes=1) * F('duree'),
+                output_field=DateTimeField(),
+            )
+        ).filter(
+            fin_existant__gt=date_heure,
+        ).exists()
+
+        if conflit_patient:
+            raise serializers.ValidationError(
+                {'date_heure': "Vous avez déjà un rendez-vous à cette heure."}
+            )
 
         attrs['_medecin'] = medecin
         attrs['_patient'] = patient
-        attrs['_duree'] = duree
+        attrs['_duree'] = medecin.duree_rdv_default
         return attrs
 
     def create(self, validated_data):

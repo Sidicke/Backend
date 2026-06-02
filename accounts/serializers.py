@@ -11,6 +11,33 @@ User = get_user_model()
 # Serializers de base pour les profils
 # ──────────────────────────────────────────────
 
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        
+        # Vérifier si l'utilisateur veut rester connecté
+        stay_logged_in = self.context['request'].data.get('stay_logged_in', False)
+        
+        if str(stay_logged_in).lower() in ['true', '1', 't', 'y', 'yes']:
+            from datetime import timedelta
+            # En prolongeant le token (ex: 30 jours) si la case est cochée
+            refresh = self.get_token(self.user)
+            refresh.set_exp(lifetime=timedelta(days=30))
+            data['refresh'] = str(refresh)
+            data['access'] = str(refresh.access_token)
+        
+        # Ajouter le rôle et info user au retour par défaut (très utile pour le frontend)
+        data['user'] = {
+            'id': self.user.id,
+            'email': self.user.email,
+            'first_name': self.user.first_name,
+            'last_name': self.user.last_name,
+            'role': self.user.role,
+        }
+        return data
+
 class PatientProfileSerializer(serializers.ModelSerializer):
     """Serializer pour le profil patient (champs spécifiques)."""
 
@@ -18,7 +45,7 @@ class PatientProfileSerializer(serializers.ModelSerializer):
         model = Patient
         fields = [
             'contact_urgence_nom', 'contact_urgence_tel',
-            'groupe_sanguin', 'allergies', 'numero_secu',
+            'groupe_sanguin', 'allergies', 'numero_secu', 'npi',
         ]
 
 
@@ -46,7 +73,6 @@ class LaborantinProfileSerializer(serializers.ModelSerializer):
 class PatientRegisterSerializer(serializers.ModelSerializer):
     """Serializer pour l'inscription d'un patient."""
 
-    email = serializers.EmailField()
     password = serializers.CharField(write_only=True, validators=[validate_password])
     password_confirm = serializers.CharField(write_only=True)
     contact_urgence_nom = serializers.CharField(max_length=150, required=False, allow_blank=True)
@@ -61,17 +87,6 @@ class PatientRegisterSerializer(serializers.ModelSerializer):
             'date_naissance', 'sexe',
             'contact_urgence_nom', 'contact_urgence_tel',
         ]
-
-    def validate_email(self, value):
-        user = User.objects.filter(email=value).first()
-        if user:
-            # Si l'utilisateur est inactif, on considère que son inscription est incomplète ou à refaire.
-            # On le supprime pour permettre une nouvelle inscription propre.
-            if not user.is_active:
-                user.delete()
-            else:
-                raise serializers.ValidationError("Un utilisateur avec cet e-mail existe déjà.")
-        return value
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
@@ -104,8 +119,8 @@ class PatientRegisterSerializer(serializers.ModelSerializer):
             date_naissance=validated_data.get('date_naissance'),
             sexe=validated_data.get('sexe', 'M'),
             role='patient',
-            is_active=False,
-            is_email_verified=False,
+            is_active=False,           # TODO: remettre à False quand on réactive la confirmation email
+            is_email_verified=False,   # TODO: remettre à False quand on réactive la confirmation email
         )
 
         # Créer le profil patient
@@ -259,8 +274,8 @@ class MedecinCreateSerializer(serializers.ModelSerializer):
             sexe=validated_data.get('sexe', 'M'),
             role='medecin',
             hopital_id=hopital_id,
-            is_active=True,
-            is_email_verified=True,
+            is_active=False,
+            is_email_verified=False,
         )
 
         numero_ordre = validated_data.get('numero_ordre', '')
@@ -278,6 +293,8 @@ class MedecinCreateSerializer(serializers.ModelSerializer):
 
         # Envoyer l'email avec le mot de passe
         send_account_created_email(user, password)
+        from .utils import send_account_created_whatsapp
+        send_account_created_whatsapp(user, password)
 
         return medecin
 
@@ -428,8 +445,8 @@ class LaborantinCreateSerializer(serializers.ModelSerializer):
             sexe=validated_data['sexe'],
             role='laborantin',
             hopital_id=hopital_id,
-            is_active=True,
-            is_email_verified=True,
+            is_active=False,
+            is_email_verified=False,
         )
 
         laborantin = Laborantin.objects.create(
@@ -438,6 +455,8 @@ class LaborantinCreateSerializer(serializers.ModelSerializer):
         )
 
         send_account_created_email(user, password)
+        from .utils import send_account_created_whatsapp
+        send_account_created_whatsapp(user, password)
 
         return laborantin
 
@@ -595,11 +614,13 @@ class AdminHopitalCreateSerializer(serializers.Serializer):
             sexe=validated_data['sexe'],
             role='admin_hopital',
             hopital_id=validated_data['hopital'],
-            is_active=True,
-            is_email_verified=True,
+            is_active=False,
+            is_email_verified=False,
         )
 
         send_account_created_email(user, password)
+        from .utils import send_account_created_whatsapp
+        send_account_created_whatsapp(user, password)
 
         return user
 
