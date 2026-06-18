@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
 from .models import User, Patient, Medecin, Laborantin
 
-
+#gg
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     """Administration du modèle User personnalisé."""
