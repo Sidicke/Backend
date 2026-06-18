@@ -71,3 +71,6 @@ __pypackages__/
 cython_debug/
 
 .env
+# Fichiers de credentials (secrets Google/Firebase)
+firebase-service-account.json
+soutenance-f1f78-firebase-adminsdk-fbsvc-11c80fbdae.json

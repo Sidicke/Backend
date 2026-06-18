@@ -44,6 +44,7 @@ def _send_fcm_push(user, n_type, message, lien=''):
         import firebase_admin
         from firebase_admin import messaging, credentials
         from .models import FCMDevice
+        import json
 
         # Initialisation si nécessaire
         if not firebase_admin._apps:
@@ -52,8 +53,12 @@ def _send_fcm_push(user, n_type, message, lien=''):
             if os.path.exists(cred_path):
                 cred = credentials.Certificate(cred_path)
                 firebase_admin.initialize_app(cred)
+            elif os.getenv('FIREBASE_CREDENTIALS'):
+                cred_dict = json.loads(os.getenv('FIREBASE_CREDENTIALS'))
+                cred = credentials.Certificate(cred_dict)
+                firebase_admin.initialize_app(cred)
             else:
-                return # Pas de config, pas d'envoi
+                return  # Pas de config, pas d'envoi
 
         tokens = list(FCMDevice.objects.filter(user=user, active=True).values_list('registration_id', flat=True))
         if not tokens:
