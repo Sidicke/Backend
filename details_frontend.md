@@ -1,4 +1,4 @@
-# Détails Frontend — Changements Backend HOPITEL
+# Détails Frontend — Changements Backend E-Santé Bénin
 
 ## Date : 13 Avril 2026
 

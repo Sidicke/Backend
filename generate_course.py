@@ -7,10 +7,10 @@ def main():
     doc = Document()
 
     # Titre
-    title = doc.add_heading("Formation Complète : Tests d'API avec Postman (Projet HOPITEL)", level=0)
+    title = doc.add_heading("Formation Complète : Tests d'API avec Postman (Projet E-Santé)", level=0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    doc.add_paragraph("Ce document est un cours détaillé, étape par étape, pour vous apprendre à configurer et maîtriser les tests d'API sur votre application HOPITEL à l'aide de Postman.")
+    doc.add_paragraph("Ce document est un cours détaillé, étape par étape, pour vous apprendre à configurer et maîtriser les tests d'API sur votre application E-Santé à l'aide de Postman.")
 
     # Section 1
     doc.add_heading("Chapitre 1 : Les Concepts Fondamentaux", level=1)
@@ -26,7 +26,7 @@ def main():
     # Section 1.5 - Setup
     doc.add_heading("Chapitre 2 : Configuration de votre Espace Postman", level=1)
     doc.add_paragraph("L'une des plus grandes forces de Postman est l'utilisation des Variables d'Environnement.")
-    doc.add_paragraph("1. En haut à droite dans Postman, cliquez sur l'icône de l'œil (Environment Quick Look) et faites 'Add'.\n2. Nommez votre environnement : 'HOPITEL Local'.\n3. Créez les variables suivantes :")
+    doc.add_paragraph("1. En haut à droite dans Postman, cliquez sur l'icône de l'œil (Environment Quick Look) et faites 'Add'.\n2. Nommez votre environnement : 'E-Santé Local'.\n3. Créez les variables suivantes :")
     
     table = doc.add_table(rows=1, cols=2)
     table.style = 'Table Grid'
@@ -42,11 +42,11 @@ def main():
     row2[0].text = 'token'
     row2[1].text = '(Laissez vide pour l\'instant)'
 
-    doc.add_paragraph("\nMaintenant, sélectionnez 'HOPITEL Local' dans le menu déroulant d'environnement en haut à droite.")
+    doc.add_paragraph("\nMaintenant, sélectionnez 'E-Santé Local' dans le menu déroulant d'environnement en haut à droite.")
 
     # Section 2 - Authentification
     doc.add_heading("Chapitre 3 : Obtenir et utiliser un Token JWT (L'Authentification)", level=1)
-    doc.add_paragraph("L'API d'HOPITEL est sécurisée par le système JWT (JSON Web Tokens). Pour accéder aux routes protégées, vous devez vous identifier.", style='Intense Quote')
+    doc.add_paragraph("L'API d'E-Santé est sécurisée par le système JWT (JSON Web Tokens). Pour accéder aux routes protégées, vous devez vous identifier.", style='Intense Quote')
     
     doc.add_heading("Étape 3.1 : Obtenir le Token", level=2)
     doc.add_paragraph("• Méthode : POST\n• URL : {{base_url}}/token/")
@@ -65,7 +65,7 @@ def main():
     
     doc.add_paragraph("Ainsi, à chaque connexion, Postman sauvegarde le jeton pour vos autres requêtes !")
 
-    # Section 3 - Tester les ressources HOPITEL
+    # Section 3 - Tester les ressources E-Santé
     doc.add_heading("Chapitre 4 : Cas Pratiques avec les fonctionnalités de l'Application", level=1)
     
     # 4.1 Prox
@@ -93,9 +93,9 @@ def main():
     code4 = doc.add_paragraph()
     code4.add_run('// Vérifie qu\'on a bien un statut 200 OK\npm.test("Status code is 200", function () {\n    pm.response.to.have.status(200);\n});\n\n// Vérifie que le temps de réponse est rapide (ex: distance géographique)\npm.test("Response time is under 500ms", function () {\n    pm.expect(pm.response.responseTime).to.be.below(500);\n});').font.name = 'Courier New'
 
-    doc.add_paragraph("\n\nFélicitations ! Avec ces scénarios, vous pouvez simuler tout le cycle HOPITEL : Le médecin, le patient, le laboratoire et l'administrateur sans toucher au code Flutter.")
+    doc.add_paragraph("\n\nFélicitations ! Avec ces scénarios, vous pouvez simuler tout le cycle E-Santé : Le médecin, le patient, le laboratoire et l'administrateur sans toucher au code Flutter.")
 
-    output_path = os.path.abspath(r"E:\Soutenance\Dossiers\Local\Backend\Cours_Postman_HOPITEL.docx")
+    output_path = os.path.abspath(r"E:\Soutenance\Dossiers\Local\Backend\Cours_Postman_ESante.docx")
     doc.save(output_path)
     print(f"Le fichier WORD a été généré avec succès dans : {output_path}")
 

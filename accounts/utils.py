@@ -5,8 +5,31 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.core.signing import TimestampSigner
+import re
 
 signer = TimestampSigner()
+
+
+def validate_and_format_benin_phone(phone_number):
+    """
+    Valide que le numéro fait 10 chiffres et commence par '01'.
+    Retourne le format +229XXXXXXXXXX ou None si invalide.
+    """
+    if not phone_number:
+        return None
+
+    # Nettoyer le numéro (garder uniquement les chiffres)
+    clean_number = re.sub(r'\D', '', phone_number)
+
+    # Vérifier le format : 10 chiffres commençant par 01
+    if len(clean_number) == 10 and clean_number.startswith('01'):
+        return f"+229{clean_number}"
+
+    # Cas où l'utilisateur saisit déjà le format international par erreur
+    if (len(clean_number) == 13 and clean_number.startswith('22901')):
+        return f"+{clean_number}"
+
+    return None
 
 def _send_email_brevo_api(subject, html_content, recipient_email, recipient_name=""):
     """

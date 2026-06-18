@@ -93,7 +93,7 @@ class PatientRegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'password_confirm': 'Les mots de passe ne correspondent pas.'})
         
         # Validation et formatage du téléphone
-        from .twilio_utils import validate_and_format_benin_phone
+        from .utils import validate_and_format_benin_phone
         tel = attrs.get('telephone')
         formatted_tel = validate_and_format_benin_phone(tel)
         if not formatted_tel:
@@ -244,7 +244,7 @@ class MedecinCreateSerializer(serializers.ModelSerializer):
             )
 
         # Validation et formatage du téléphone
-        from .twilio_utils import validate_and_format_benin_phone
+        from .utils import validate_and_format_benin_phone
         tel = attrs.get('telephone')
         formatted_tel = validate_and_format_benin_phone(tel)
         if not formatted_tel:
@@ -417,7 +417,7 @@ class LaborantinCreateSerializer(serializers.ModelSerializer):
             )
 
         # Validation et formatage du téléphone
-        from .twilio_utils import validate_and_format_benin_phone
+        from .utils import validate_and_format_benin_phone
         tel = attrs.get('telephone')
         formatted_tel = validate_and_format_benin_phone(tel)
         if not formatted_tel:
@@ -583,7 +583,7 @@ class AdminHopitalCreateSerializer(serializers.Serializer):
 
     def validate(self, attrs):
         # Validation et formatage du téléphone
-        from .twilio_utils import validate_and_format_benin_phone
+        from .utils import validate_and_format_benin_phone
         tel = attrs.get('telephone')
         formatted_tel = validate_and_format_benin_phone(tel)
         if not formatted_tel:

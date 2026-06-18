@@ -59,7 +59,6 @@ class PatientRegisterView(generics.CreateAPIView):
             user.is_email_verified = True
             user.save(update_fields=['is_active', 'is_email_verified'])
             
-            # Message spécial pour production
             return Response(
                 {'message': "Inscription réussie ! Votre compte a été activé automatiquement."},
                 status=status.HTTP_201_CREATED,
@@ -136,6 +135,69 @@ class PatientRegisterView(generics.CreateAPIView):
         )
 
 
+class ResendCodeView(APIView):
+    """Renvoie le code OTP par WhatsApp et Email."""
+    permission_classes = [AllowAny]
+
+    from django.db import transaction
+
+    def post(self, request):
+        from django.conf import settings
+        import logging
+        import random
+        logger = logging.getLogger(__name__)
+
+        email = request.data.get('email', '').strip().lower()
+        if not email:
+            return Response({'error': "L'email est requis."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({'error': "Aucun compte avec cet email."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.is_active and user.is_email_verified:
+            return Response({'message': "Ce compte est déjà activé."}, status=status.HTTP_200_OK)
+
+        # Nouveau code OTP
+        otp_code = "".join([str(random.randint(0, 9)) for _ in range(6)])
+        user.activation_code = otp_code
+        user.save(update_fields=['activation_code'])
+
+        canaux = []
+
+        # 1. WhatsApp
+        if getattr(settings, 'ENABLE_WHATSAPP', True):
+            try:
+                phone = getattr(user, 'telephone', None)
+                if phone:
+                    clean_phone = "".join(filter(str.isdigit, str(phone)))
+                    msg = f"🔐 *HOPITEL - Nouveau code*\n\nVotre code d'activation est : *{otp_code}*\n\nSaisissez ce code dans l'application."
+                    result = send_whatsapp_message(clean_phone, msg)
+                    if result and result.get('success'):
+                        canaux.append('whatsapp')
+                        logger.info(f"[NOTIF] Resend OTP WhatsApp à {clean_phone}")
+            except Exception as e:
+                logger.warning(f"Resend OTP WhatsApp échoué: {e}")
+
+        # 2. Email
+        if getattr(settings, 'ENABLE_EMAILS', True):
+            try:
+                send_verification_email(user, otp_code)
+                canaux.append('email')
+                logger.info(f"[NOTIF] Resend OTP Email à {user.email}")
+            except Exception as e:
+                logger.warning(f"Resend OTP Email échoué: {e}")
+
+        if not canaux:
+            return Response(
+                {'error': "Impossible d'envoyer le code. Aucun canal disponible."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response({'message': "Un nouveau code vous a été envoyé.", 'canaux': canaux})
+
+
 from django.shortcuts import render
 
 class ActivateByCodeView(APIView):
@@ -205,22 +267,40 @@ class RequestPasswordResetView(APIView):
                 return Response({'error': "Ce compte n'est pas actif."}, status=status.HTTP_400_BAD_REQUEST)
             
             token = generate_secure_token(user.pk)
+            
+            canaux_ok = []
+            
+            # 1. Email
             try:
                 send_password_reset_email(user, token)
+                canaux_ok.append('email')
             except Exception:
                 pass
-                
-            from accounts.utils import send_password_reset_whatsapp
-            result = send_password_reset_whatsapp(user, token)
             
-            if result and not result.get('success'):
+            # 2. WhatsApp 
+            from accounts.utils import send_password_reset_whatsapp
+            try:
+                result = send_password_reset_whatsapp(user, token)
+                if result and result.get('success'):
+                    canaux_ok.append('whatsapp')
+            except Exception:
+                pass
+            
+            if not canaux_ok:
                 return Response(
-                    {'error': "Votre numéro n'a pas de WhatsApp pour recevoir le lien de réinitialisation."},
-                    status=status.HTTP_400_BAD_REQUEST,
+                    {'error': "Impossible d'envoyer le lien de réinitialisation. Aucun canal disponible."},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
             
+            if 'whatsapp' in canaux_ok and 'email' in canaux_ok:
+                msg = "Un lien de réinitialisation vous a été envoyé par email et WhatsApp."
+            elif 'whatsapp' in canaux_ok:
+                msg = "Un lien de réinitialisation vous a été envoyé sur WhatsApp."
+            else:
+                msg = "Un lien de réinitialisation vous a été envoyé par email."
+            
             return Response(
-                {'message': "Un lien de réinitialisation vous a été envoyé sur WhatsApp."},
+                {'message': msg},
                 status=status.HTTP_200_OK,
             )
         except User.DoesNotExist:

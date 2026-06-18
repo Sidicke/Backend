@@ -7,9 +7,11 @@ from .models import Disponibilite, RendezVous
 
 def generer_creneaux(medecin, date_debut, date_fin):
     """
-    Génère les créneaux libres d'un médecin sur une période donnée.
-    Prend en compte les plages récurrentes, les exceptions et les indisponibilités.
-    Retourne une liste de dict : [{'date': ..., 'heure_debut': ..., 'heure_fin': ...}, ...]
+    Génère les créneaux d'un médecin sur une période donnée avec leur statut.
+    Retourne une liste de dict : [{'date': ..., 'heure_debut': ..., 'heure_fin': ..., 'statut': 'libre'|'occupe'|'indisponible'}, ...]
+    - 'libre' : créneau disponible à la réservation
+    - 'occupe' : un rendez-vous déjà pris sur ce créneau
+    - 'indisponible' : le médecin a marqué cette plage comme indisponible
     """
     duree = medecin.duree_rdv_default
     creneaux = []
@@ -50,9 +52,10 @@ def generer_creneaux(medecin, date_debut, date_fin):
 
     # Parcourir chaque jour de la période
     jour_courant = date_debut
+    maintenant = timezone.now()
+    
     while jour_courant <= date_fin:
         # Ne pas proposer de créneaux dans le passé
-        maintenant = timezone.now()
         if jour_courant < maintenant.date():
             jour_courant += timedelta(days=1)
             continue
@@ -94,17 +97,25 @@ def generer_creneaux(medecin, date_debut, date_fin):
                         est_indisponible = True
                         break
 
-                # Vérifier si le créneau est occupé
+                # Vérifier si le créneau est occupé par un RDV
                 est_occupe = est_dans_rdv(creneau_debut, creneau_fin)
 
                 # Vérifier que le créneau est dans le futur
                 est_futur = creneau_debut > maintenant
 
-                if not est_indisponible and not est_occupe and est_futur:
+                if est_futur:
+                    if est_indisponible:
+                        statut = 'indisponible'
+                    elif est_occupe:
+                        statut = 'occupe'
+                    else:
+                        statut = 'libre'
+
                     creneaux.append({
                         'date': jour_courant.isoformat(),
                         'heure_debut': creneau_debut.strftime('%H:%M'),
                         'heure_fin': creneau_fin.strftime('%H:%M'),
+                        'statut': statut,
                     })
 
                 creneau_debut = creneau_fin
@@ -112,4 +123,3 @@ def generer_creneaux(medecin, date_debut, date_fin):
         jour_courant += timedelta(days=1)
 
     return creneaux
-

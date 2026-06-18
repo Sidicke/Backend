@@ -1,6 +1,7 @@
 from django.urls import path
 
 from . import views
+from . import supervision_views
 
 app_name = 'hopitaux'
 
@@ -13,6 +14,13 @@ urlpatterns = [
     path('hopitaux/nearby/', views.NearbyHospitalView.as_view(), name='hopital-nearby'),
     path('hopitaux/', views.HopitalListCreateView.as_view(), name='hopital-list-create'),
     path('hopitaux/<int:pk>/', views.HopitalDetailView.as_view(), name='hopital-detail'),
+
+    # Supervision Admin Hôpital
+    path('hopitaux/supervision/dashboard/', supervision_views.AdminHopitalDashboardGlobalView.as_view(), name='supervision-dashboard'),
+    path('hopitaux/supervision/rendezvous/', supervision_views.AdminHopitalRendezVousListView.as_view(), name='supervision-rendezvous'),
+    path('hopitaux/supervision/consultations/', supervision_views.AdminHopitalConsultationListView.as_view(), name='supervision-consultations'),
+    path('hopitaux/supervision/laboratoire/', supervision_views.AdminHopitalLaboratoireListView.as_view(), name='supervision-laboratoire'),
+    path('hopitaux/supervision/patient/<int:patient_id>/parcours/', supervision_views.AdminHopitalPatientParcoursView.as_view(), name='supervision-patient-parcours'),
 
     # Services globaux
     path('services/', views.ServiceListCreateView.as_view(), name='service-list-create'),

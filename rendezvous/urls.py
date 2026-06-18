@@ -16,7 +16,7 @@ urlpatterns = [
     path('rendezvous/<int:pk>/', views.RendezVousDetailView.as_view(), name='rendezvous-detail'),
     path('rendezvous/<int:pk>/confirmer/', views.RendezVousConfirmerView.as_view(), name='rendezvous-confirmer'),
     path('rendezvous/<int:pk>/refuser/', views.RendezVousRefuserView.as_view(), name='rendezvous-refuser'),
-    path('rendezvous/<int:pk>/annuler/', views.RendezVousAnnulerView.as_view(), name='rendezvous-annuler'),
+    path('rendezvous/<int:pk>/annuler/', views.Rendez_vousAnnulerView.as_view(), name='rendezvous-annuler'),
     path('rendezvous/<int:pk>/terminer/', views.RendezVousTerminerView.as_view(), name='rendezvous-terminer'),
     path('rendezvous/<int:pk>/preenregistrement/', views.PreEnregistrementView.as_view(), name='rendezvous-preenregistrement'),
 

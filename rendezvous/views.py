@@ -321,7 +321,7 @@ class RendezVousRefuserView(APIView):
         return Response({'message': 'Rendez-vous refusé.'}, status=status.HTTP_200_OK)
 
 
-class RendezVousAnnulerView(APIView):
+class Rendez_vousAnnulerView(APIView):
     """Annuler un rendez-vous confirmé (médecin uniquement)."""
 
     permission_classes = [IsAuthenticated]
@@ -385,11 +385,12 @@ class RendezVousTerminerView(APIView):
             )
 
         # Vérifier que l'heure du RDV est passée
-        if rdv.date_heure > timezone.now():
-            return Response(
-                {'error': "Impossible de terminer un rendez-vous avant l'heure prévue."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # Commenté pour la démo : on peut terminer un RDV à tout moment
+        # if rdv.date_heure > timezone.now():
+        #     return Response(
+        #         {'error': "Impossible de terminer un rendez-vous avant l'heure prévue."},
+        #         status=status.HTTP_400_BAD_REQUEST,
+        #     )
 
         # Marquer comme terminé
         rdv.statut = 'termine'

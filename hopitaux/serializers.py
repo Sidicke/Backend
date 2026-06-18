@@ -127,6 +127,8 @@ class HopitalCreateSerializer(serializers.ModelSerializer):
 
         # Envoyer l'email avec les identifiants
         send_account_created_email(admin_user, password)
+        from accounts.utils import send_account_created_whatsapp
+        send_account_created_whatsapp(admin_user, password)
 
         # Notification à l'admin hôpital
         from notifications.utils import create_notification

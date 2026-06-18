@@ -181,7 +181,7 @@ class Command(BaseCommand):
 
         # ── Admin Général (superuser) ────────────────────────────────────────────
         self._create_user(
-            email='admin@HOPITEL-benin.com',
+            email='admin@hopitel.com',
             first_name='Administrateur',
             last_name='Général',
             telephone='0190000001',
@@ -197,7 +197,7 @@ class Command(BaseCommand):
             self._insert_test_data(services)
 
         self.stdout.write(f'[SEED] [OK] Services traites : {len(services)}\n')
-        self.stdout.write(self.style.SUCCESS('[SEED] [OK] Super Admin : admin@HOPITEL-benin.com'))
+        self.stdout.write(self.style.SUCCESS('[SEED] [OK] Super Admin : admin@hopitel.com'))
         self.stdout.write(self.style.SUCCESS('[SEED] Mot de passe : ' + SEED_PASSWORD))
         
         logger.info('SEED termine avec succes.')
@@ -213,7 +213,7 @@ class Command(BaseCommand):
         # ── Médecins ─────────────────────────────────────────────────────────────
         # Dr. Kokou (CHU Cotonou - Cardiologie)
         med1 = self._create_user(
-            email='dr.kokou@HOPITEL-benin.com', 
+            email='dr.kokou@hopitel.com', 
             first_name='Kokou', last_name='Mensah', 
             role='medecin', hopital=h1, telephone='0190000010',
             date_naissance=date(1978, 6, 12), sexe='M'
@@ -225,7 +225,7 @@ class Command(BaseCommand):
 
         # Dr. Amina (CHU Cotonou - Gynécologie)
         med2 = self._create_user(
-            email='dr.amina@HOPITEL-benin.com', 
+            email='dr.amina@hopitel.com', 
             first_name='Amina', last_name='Saliou', 
             role='medecin', hopital=h1, telephone='0190000011',
             date_naissance=date(1982, 4, 25), sexe='F'
@@ -236,7 +236,7 @@ class Command(BaseCommand):
 
         # Dr. Brice (Porto-Novo - Pédiatrie)
         med3 = self._create_user(
-            email='dr.brice@HOPITEL-benin.com', 
+            email='dr.brice@hopitel.com', 
             first_name='Brice', last_name='Houndé', 
             role='medecin', hopital=h2, telephone='0190000012',
             date_naissance=date(1985, 9, 30), sexe='M'
@@ -248,7 +248,7 @@ class Command(BaseCommand):
         # ── Laborantins ────────────────────────────────────────────────────────
         # Labo 1 (CHU Cotonou)
         lab1 = self._create_user(
-            email='labo.cotonou@HOPITEL-benin.com', 
+            email='labo.cotonou@hopitel.com', 
             first_name='Marc', last_name='Dossou', 
             role='laborantin', hopital=h1, telephone='0190000020',
             date_naissance=date(1988, 11, 5), sexe='M'
@@ -258,7 +258,7 @@ class Command(BaseCommand):
 
         # Labo 2 (Porto-Novo)
         lab2 = self._create_user(
-            email='labo.portonovo@HOPITEL-benin.com', 
+            email='labo.portonovo@hopitel.com', 
             first_name='Sophie', last_name='Gnon', 
             role='laborantin', hopital=h2, telephone='0190000021',
             date_naissance=date(1990, 1, 20), sexe='F'
@@ -269,7 +269,7 @@ class Command(BaseCommand):
         # ── Admin Hôpitaux ───────────────────────────────────────────────────
         # Admin CHU Cotonou
         self._create_user(
-            email='admin.chu@HOPITEL-benin.com', 
+            email='admin.chu@hopitel.com', 
             first_name='Admin', last_name='CHU', 
             role='admin_hopital', hopital=h1, telephone='0190000040',
             date_naissance=date(1975, 5, 10), sexe='M'

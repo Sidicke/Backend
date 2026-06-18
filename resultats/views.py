@@ -155,13 +155,6 @@ class DemandeAnalyseCloturerView(APIView):
                 msg = (
                     f"🔬 Résultats Disponibles ({resultat.hopital.code_court})\n\n"
                     f"Vos résultats d'analyse pour « {titre} » sont prêts.\n"
-                    f"Code d'accès sécurisé : *{resultat.code_access}*"
-                )
-                # Note: J'ai remarqué une petite typo potentielle dans le code existant 'code_acces' vs 'code_access'
-                # Je reste sur la logique du modèle.
-                msg = (
-                    f"🔬 Résultats Disponibles ({resultat.hopital.code_court})\n\n"
-                    f"Vos résultats d'analyse pour « {titre} » sont prêts.\n"
                     f"Code d'accès : *{resultat.code_acces}*"
                 )
                 send_whatsapp_message(clean_phone, msg)

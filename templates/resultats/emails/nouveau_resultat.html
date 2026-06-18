@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: Arial, sans-serif; background: #f4f7fc; margin: 0; padding: 20px;">
+  <div style="max-width: 600px; margin: auto; background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <h1 style="color: #2563eb; font-size: 22px;">🏥 HOPITEL</h1>
+    <h2 style="color: #1f2937; font-size: 18px;">🔬 Résultats d'analyse disponibles</h2>
+    <p style="color: #4b5563; font-size: 15px;">Bonjour {{ nom_patient }},</p>
+    <p style="color: #4b5563; font-size: 15px;">Vos résultats d'analyse sont disponibles :</p>
+    <div style="background: #f9fafb; border-radius: 8px; padding: 15px; margin: 20px 0;">
+      <p style="margin: 5px 0;"><strong>Analyse :</strong> {{ resultat.titre }}</p>
+      <p style="margin: 5px 0;"><strong>Hôpital :</strong> {{ hopital.nom }}</p>
+      <p style="margin: 5px 0;"><strong>Laboratoire :</strong> {{ resultat.laboratoire }}</p>
+      <p style="margin: 5px 0;"><strong>Code d'accès :</strong> <code style="background: #eef2ff; padding: 2px 6px; border-radius: 4px; font-size: 16px;">{{ resultat.code_acces }}</code></p>
+    </div>
+    <p style="text-align: center; margin: 25px 0;">
+      <a href="#" style="background: #2563eb; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">
+        Voir mes résultats
+      </a>
+    </p>
+    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 25px 0;">
+    <p style="color: #9ca3af; font-size: 12px; text-align: center;">&copy; 2025 HOPITEL</p>
+  </div>
+</body>
+</html>
