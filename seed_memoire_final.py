@@ -1,6 +1,6 @@
 import os
 import django
-from datetime import timedelta, date, time
+from datetime import timedelta
 from django.utils import timezone
 import random
 
@@ -18,169 +18,226 @@ from notifications.models import Notification
 
 User = get_user_model()
 
+
+def _get_or_create_user(email, password, **fields):
+    """Crée un utilisateur ou retourne l'existant (idempotent)."""
+    user, created = User.objects.get_or_create(
+        email=email,
+        defaults={**fields},
+    )
+    if created:
+        user.set_password(password)
+        user.save(update_fields=['password'])
+        print(f"  [NEW]  {email} ({fields.get('role', 'n/a')})")
+    else:
+        # Met à jour les champs si l'utilisateur existe déjà
+        changed = False
+        for k, v in fields.items():
+            if getattr(user, k, None) != v:
+                setattr(user, k, v)
+                changed = True
+        if changed:
+            user.save()
+        print(f"  [EXIST] {email}")
+    return user
+
+
 def clear_data():
     """Nettoie les données existantes pour repartir sur une base propre."""
     print("--- Nettoyage complet des données de démo ---")
-    
-    # 1. Liste des emails à nettoyer
-    emails_to_clear = [
-        "admin@hopitel.com", "dr.dossou@hopitel.com", "dr.tossou@hopitel.com", 
-        "dr.amoussou@hopitel.com", "labo.agbo@hopitel.com", "sidicke@hopitel.com", 
+
+    # 1. Anciens emails de démo (seed précédents)
+    old_emails = [
+        "admin@hopitel.com", "dr.dossou@hopitel.com", "dr.tossou@hopitel.com",
+        "dr.amoussou@hopitel.com", "labo.agbo@hopitel.com", "sidicke@hopitel.com",
         "koffi@hopitel.com", "amina@hopitel.com", "admin.cnhu@hopitel.com",
         "admin.chud@hopitel.com", "admin.parakou@hopitel.com", "admin.calavi@hopitel.com",
         "lab.cnhu@hopitel.com", "lab.chud@hopitel.com", "lab.parakou@hopitel.com",
-        "admin@esante.com", "dossou@esante.com", "tossou@esante.com", "sidicke@esante.com"
+        "admin@esante.com", "dossou@esante.com", "tossou@esante.com", "sidicke@esante.com",
+        "admin.mahouna@hopitel.com", "dr.kodjo@hopitel.com",
     ]
-    User.objects.filter(email__in=emails_to_clear).delete()
-    
-    # 2. Liste des hôpitaux à nettoyer
-    hosp_names = [
-        "CNHU-HKM (Cotonou)", "CHUD Porto-Novo", "CHU Parakou", 
-        "Hôpital de Zone (Calavi)", "Clinique Mahouna", "CNHU-HKM Cotonou", "CHD Ouémé-Plateau"
+    deleted, _ = User.objects.filter(email__in=old_emails).delete()
+    if deleted:
+        print(f"  Supprimé {deleted} ancien(s) utilisateur(s) de démo")
+
+    # 2. Anciens hôpitaux de démo
+    old_hosps = [
+        "CNHU-HKM (Cotonou)", "CHUD Porto-Novo", "CHU Parakou",
+        "Hôpital de Zone (Calavi)", "Clinique Mahouna", "CNHU-HKM Cotonou",
+        "CHD Ouémé-Plateau",
     ]
-    Hopital.objects.filter(nom__in=hosp_names).delete()
+    Hopital.objects.filter(nom__in=old_hosps).delete()
+
 
 def run():
     clear_data()
     print("--- Début du Seed Mémoire Final (Restoration complète) ---")
-    
-    # 1. HÔPITAUX ET SERVICES
-    h_cnhu = Hopital.objects.create(
-        nom="CNHU-HKM (Cotonou)", adresse="Avenue Jean-Paul II, Cotonou", ville="Cotonou",
-        latitude=6.3654, longitude=2.4183, telephone="+229 21 30 01 02", email="contact@cnhu.hopitel.com", is_active=True
-    )
-    h_chud = Hopital.objects.create(
-        nom="CHUD Porto-Novo", adresse="Ouando, Porto-Novo", ville="Porto-Novo",
-        latitude=6.4969, longitude=2.6289, telephone="+229 20 21 21 21", email="contact@chud.hopitel.com", is_active=True
-    )
-    h_parakou = Hopital.objects.create(
-        nom="CHU Parakou", adresse="Quartier Banikanni, Parakou", ville="Parakou",
-        latitude=9.3372, longitude=2.6303, telephone="+229 23 61 00 00", email="contact@chu-parakou.hopitel.com", is_active=True
-    )
-    h_calavi = Hopital.objects.create(
-        nom="Hôpital de Zone (Calavi)", adresse="Abomey-Calavi", ville="Calavi",
-        latitude=6.4469, longitude=2.3524, telephone="+229 21 36 00 00", email="contact@hz-calavi.hopitel.com", is_active=True
-    )
-    h_mahouna = Hopital.objects.create(
-        nom="Clinique Mahouna", adresse="Quartier Patte d'Oie, Cotonou", ville="Cotonou",
-        latitude=6.3750, longitude=2.4100, telephone="+229 21 33 44 55", email="contact@mahouna.hopitel.com", is_active=True
-    )
 
+    # ━━━  1.  HÔPITAL  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    h_lokossa, _ = Hopital.objects.update_or_create(
+        nom="Hôpital de Zone de Lokossa",
+        defaults=dict(
+            adresse="Route de Lokossa, Lokossa",
+            ville="Lokossa",
+            latitude=6.6334096,
+            longitude=1.7141026,
+            telephone="+229 22 41 10 29",
+            email="contact@hz-lokossa.hopitel.com",
+            is_active=True,
+        ),
+    )
+    print(f"  Hôpital : {h_lokossa.nom} (lat={h_lokossa.latitude}, lng={h_lokossa.longitude})")
+
+    # ━━━  2.  SERVICES  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     services_data = [
-        ("Cardiologie", "Maladies du cœur."),
-        ("Pédiatrie", "Médecine des enfants."),
-        ("Gynécologie", "Santé de la femme."),
+        ("Cardiologie", "Maladies du cœur et du système vasculaire."),
+        ("Pédiatrie", "Médecine des enfants et des nourrissons."),
+        ("Gynécologie", "Santé de la femme et suivi obstétrical."),
         ("Ophtalmologie", "Maladies des yeux."),
-        ("Chirurgie Générale", "Interventions chirurgicales."),
-        ("Neurologie", "Système nerveux.")
+        ("Chirurgie Générale", "Interventions chirurgicales courantes."),
+        ("Neurologie", "Pathologies du système nerveux."),
     ]
-    
     services_obj = {}
     for nom, desc in services_data:
         s, _ = Service.objects.get_or_create(nom=nom, defaults={"description": desc, "is_active": True})
         services_obj[nom] = s
 
-    for h in [h_cnhu, h_chud, h_parakou, h_calavi, h_mahouna]:
-        for s in services_obj.values():
-            HopitalService.objects.create(hopital=h, service=s)
+    for s in services_obj.values():
+        HopitalService.objects.get_or_create(hopital=h_lokossa, service=s)
 
-    # 2. UTILISATEURS
-    admin = User.objects.create_user(email="admin@hopitel.com", password="HopitelAdmin2025*", role="admin_general", 
-                                     first_name="Ariel", last_name="Admin", telephone="22990000001", sexe="M", is_active=True)
+    # ━━━  3.  UTILISATEURS  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    print("\n--- Création des utilisateurs ---")
 
-    # Admin Hôpitaux
-    u_admin_cnhu = User.objects.create_user(email="admin.cnhu@hopitel.com", password="AdminCnhu2025!", role="admin_hopital", 
-                                     first_name="Victor", last_name="ADEBAYO", hopital=h_cnhu, telephone="22990111111", sexe="M", is_active=True)
-    
-    u_admin_chud = User.objects.create_user(email="admin.chud@hopitel.com", password="AdminChud2025!", role="admin_hopital", 
-                                     first_name="Claire", last_name="SOGLO", hopital=h_chud, telephone="22990222222", sexe="F", is_active=True)
-                                     
-    u_admin_mahouna = User.objects.create_user(email="admin.mahouna@hopitel.com", password="AdminMahouna2025!", role="admin_hopital", 
-                                     first_name="Alain", last_name="KPONOU", hopital=h_mahouna, telephone="22990333333", sexe="M", is_active=True)
+    # 3a. Admin général (plate-forme)
+    admin = _get_or_create_user(
+        email="admin@hopitel.com", password="HopitelAdmin2025*",
+        role="admin_general", first_name="Ariel", last_name="Admin",
+        telephone="22990000001", sexe="M", is_active=True,
+    )
 
-    # Médecins (CNHU)
-    u_med1 = User.objects.create_user(email="dr.dossou@hopitel.com", password="MedecinDossou123!", role="medecin", 
-                                     first_name="Jean", last_name="DOSSOU", hopital=h_cnhu, telephone="22922222222", sexe="M", is_active=True)
-    med1 = Medecin.objects.create(user=u_med1, numero_ordre="BEN-MED-1042", biographie="Expert en cardiologie interventionnelle.")
-    MedecinService.objects.create(medecin=med1, service=services_obj["Cardiologie"])
+    # 3b. Admin Hôpital de Zone de Lokossa
+    u_admin = _get_or_create_user(
+        email="gillmarilin4@gmail.com", password="AdminLokossa2025!",
+        role="admin_hopital", first_name="Gill-Marilin", last_name="BADJI",
+        hopital=h_lokossa, telephone="22990111111", sexe="F", is_active=True,
+    )
 
-    u_med1b = User.objects.create_user(email="dr.kodjo@hopitel.com", password="MedecinKodjo123!", role="medecin", 
-                                     first_name="Fabrice", last_name="KODJO", hopital=h_cnhu, telephone="22922222223", sexe="M", is_active=True)
-    med1b = Medecin.objects.create(user=u_med1b, numero_ordre="BEN-MED-1043", biographie="Spécialiste de la chirurgie mini-invasive.")
-    MedecinService.objects.create(medecin=med1b, service=services_obj["Chirurgie Générale"])
+    # 3c. Médecin 1 — Cardiologue
+    u_med1 = _get_or_create_user(
+        email="marionbdj9@gmail.com", password="MedecinCardio2025!",
+        role="medecin", first_name="Marion", last_name="BADJI",
+        hopital=h_lokossa, telephone="22990222222", sexe="F", is_active=True,
+    )
+    med1, _ = Medecin.objects.get_or_create(
+        user=u_med1,
+        defaults={"numero_ordre": "BEN-MED-5001", "biographie": "Cardiologue interventionnelle, spécialisée en échocardiographie et cathétérisme cardiaque."},
+    )
+    MedecinService.objects.get_or_create(medecin=med1, service=services_obj["Cardiologie"])
 
-    # Médecin (Mahouna)
-    u_med2 = User.objects.create_user(email="dr.tossou@hopitel.com", password="TossouPedia!99", role="medecin", 
-                                     first_name="Marie", last_name="TOSSOU", hopital=h_mahouna, telephone="22933333333", sexe="F", is_active=True)
-    med2 = Medecin.objects.create(user=u_med2, numero_ordre="BEN-MED-2055", biographie="Spécialisée en médecine néonatale.")
-    MedecinService.objects.create(medecin=med2, service=services_obj["Pédiatrie"])
+    # 3d. Médecin 2 — Pédiatre
+    u_med2 = _get_or_create_user(
+        email="akouemahogillchristmarilinbadj@gmail.com", password="MedecinPedia2025!",
+        role="medecin", first_name="Akoue-Maho", last_name="GILL-CHRIST",
+        hopital=h_lokossa, telephone="22990333333", sexe="M", is_active=True,
+    )
+    med2, _ = Medecin.objects.get_or_create(
+        user=u_med2,
+        defaults={"numero_ordre": "BEN-MED-5002", "biographie": "Pédiatre néonatologue, prise en charge des nouveau-nés et enfants."},
+    )
+    MedecinService.objects.get_or_create(medecin=med2, service=services_obj["Pédiatrie"])
 
-    # Médecin (CHUD)
-    u_med3 = User.objects.create_user(email="dr.amoussou@hopitel.com", password="AmoussouGyn!25", role="medecin", 
-                                     first_name="Paul", last_name="AMOUSSOU", hopital=h_chud, telephone="22944444444", sexe="M", is_active=True)
-    med3 = Medecin.objects.create(user=u_med3, numero_ordre="BEN-MED-3088", biographie="Excellente prise en charge des grossesses à risque.")
-    MedecinService.objects.create(medecin=med3, service=services_obj["Gynécologie"])
+    # 3e. Médecin 3 — Neurologue
+    u_med3 = _get_or_create_user(
+        email="gillbadji@gmail.com", password="MedecinNeuro2025!",
+        role="medecin", first_name="Gill", last_name="BADJI",
+        hopital=h_lokossa, telephone="22990444444", sexe="M", is_active=True,
+    )
+    med3, _ = Medecin.objects.get_or_create(
+        user=u_med3,
+        defaults={"numero_ordre": "BEN-MED-5003", "biographie": "Neurologue, spécialisé en électroencéphalographie et maladies neurodégénératives."},
+    )
+    MedecinService.objects.get_or_create(medecin=med3, service=services_obj["Neurologie"])
 
-    # Patients
-    u_pat1 = User.objects.create_user(email="sidicke@hopitel.com", password="PatientSidicke01", role="patient", 
-                                     first_name="Sidicke", last_name="TRAORÉ", telephone="22990000005", sexe="M", is_active=True)
-    pat1 = Patient.objects.create(user=u_pat1, groupe_sanguin="O+", npi="1029384756")
+    # 3f. Laborantin
+    u_lab = _get_or_create_user(
+        email="marilinbadji@gmail.com", password="LaboLokossa2025!",
+        role="laborantin", first_name="Marilin", last_name="BADJI",
+        hopital=h_lokossa, telephone="22990555555", sexe="F", is_active=True,
+    )
+    laborantin, _ = Laborantin.objects.get_or_create(
+        user=u_lab,
+        defaults={"laboratoire": "Laboratoire HZ Lokossa"},
+    )
 
-    u_pat2 = User.objects.create_user(email="koffi@hopitel.com", password="PatientKoffi02", role="patient", 
-                                     first_name="Koffi", last_name="MENSAH", telephone="22990000006", sexe="M", is_active=True)
-    pat2 = Patient.objects.create(user=u_pat2, groupe_sanguin="A+", npi="2938475610")
+    # 3g. Patients fictifs (pour les démos de RDV)
+    patients_data = [
+        ("sidicke@hopitel.com", "PatientSidicke01", "Sidicke", "TRAORÉ", "M", "O+", "1029384756"),
+        ("koffi@hopitel.com", "PatientKoffi02", "Koffi", "MENSAH", "M", "A+", "2938475610"),
+        ("amina@hopitel.com", "PatientAmina03", "Amina", "SALIU", "F", "B-", "9384756102"),
+    ]
+    patients = []
+    for p_email, p_pwd, fn, ln, sx, gs, npi in patients_data:
+        u_pat = _get_or_create_user(
+            email=p_email, password=p_pwd, role="patient",
+            first_name=fn, last_name=ln, telephone="22990000005", sexe=sx, is_active=True,
+        )
+        pat, _ = Patient.objects.get_or_create(
+            user=u_pat,
+            defaults={"groupe_sanguin": gs, "npi": npi},
+        )
+        patients.append(pat)
 
-    u_pat3 = User.objects.create_user(email="amina@hopitel.com", password="PatientAmina03", role="patient", 
-                                     first_name="Amina", last_name="SALIU", telephone="22990000007", sexe="F", is_active=True)
-    pat3 = Patient.objects.create(user=u_pat3, groupe_sanguin="B-", npi="9384756102")
+    pat1, pat2, pat3 = patients
 
-    # Laborantin (CNHU)
-    u_lab = User.objects.create_user(email="labo.agbo@hopitel.com", password="AgboLabo229#", role="laborantin", 
-                                     first_name="Marc", last_name="AGBO", hopital=h_cnhu, telephone="22999999999", sexe="M", is_active=True)
-    laborantin = Laborantin.objects.create(user=u_lab, laboratoire="BioSanté CNHU")
-
-    # 3. DISPONIBILITÉS & RDV
-    medecins = [med1, med1b, med2, med3]
-    patients = [pat1, pat2, pat3]
-    
-    # Création des disponibilités (Lundi à Vendredi)
+    # ━━━  4.  DISPONIBILITÉS  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    print("\n--- Création des disponibilités ---")
+    medecins = [med1, med2, med3]
     for m in medecins:
-        for jour in range(1, 6):
-            Disponibilite.objects.create(medecin=m, jour_semaine=jour, heure_debut="08:00", heure_fin="16:00", type="recurrent")
+        for jour in range(1, 6):  # Lundi–Vendredi
+            Disponibilite.objects.get_or_create(
+                medecin=m, jour_semaine=jour,
+                defaults={"heure_debut": "08:00", "heure_fin": "16:00", "type": "recurrent"},
+            )
 
-    # Création de RDV Historiques et Futurs pour garnir les tableaux de bord
+    # ━━━  5.  RENDEZ-VOUS  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    print("\n--- Création des rendez-vous ---")
     now = timezone.now()
-    
+
     rdv_data = [
-        # RDV Terminés
+        # Terminés
         (pat1, med1, now - timedelta(days=5), 'termine', "Contrôle de routine cardiaque"),
         (pat2, med1, now - timedelta(days=3), 'termine', "Douleurs thoraciques"),
-        (pat3, med2, now - timedelta(days=2), 'termine', "Visite pédiatrique pour le petit"),
-        (pat1, med3, now - timedelta(days=1), 'termine', "Consultation de suivi gyncélogique"),
-        # RDV en attente / prévus
-        (pat2, med1b, now + timedelta(days=1), 'en_attente', "Préparation intervention chirurgicale"),
-        (pat3, med1, now + timedelta(days=2), 'confirme', "Suivi post-traitement"),
+        (pat3, med2, now - timedelta(days=2), 'termine', "Visite pédiatrique"),
+        (pat1, med3, now - timedelta(days=1), 'termine', "Consultation neurologique"),
+        # En attente / Confirmés
+        (pat2, med3, now + timedelta(days=1), 'en_attente', "Céphalées récurrentes"),
+        (pat3, med1, now + timedelta(days=2), 'confirme', "Suivi post-traitement cardiaque"),
         (pat1, med2, now + timedelta(days=4), 'en_attente', "Vaccination enfant"),
-        (pat2, med3, now + timedelta(days=5), 'confirme', "Contrôle annuel"),
-        # RDV Annulés
-        (pat3, med1b, now + timedelta(days=6), 'annule', "Annulé par le patient"),
+        (pat2, med1, now + timedelta(days=5), 'confirme', "Contrôle annuel cardiologie"),
+        # Annulé
+        (pat3, med3, now + timedelta(days=6), 'annule', "Annulé par le patient"),
     ]
 
     for p, m, dt, statut, motif in rdv_data:
-        rdv = RendezVous.objects.create(
-            patient=p, medecin=m, statut=statut, duree=30,
-            date_heure=dt.replace(hour=random.choice([9, 10, 11, 14, 15])), motif=motif
+        rdv, rdv_created = RendezVous.objects.get_or_create(
+            patient=p, medecin=m, motif=motif,
+            defaults={
+                "statut": statut,
+                "duree": 30,
+                "date_heure": dt.replace(hour=random.choice([9, 10, 11, 14, 15])),
+            },
         )
-        
-        # Création de consultation pour les RDV terminés
-        if statut == 'termine':
-            compte_rendu = "Le patient présente des paramètres vitaux stables. Prescription d'un traitement léger et repos recommandé."
-            cons = Consultation.objects.create(rendez_vous=rdv, compte_rendu=compte_rendu, est_cloture=True)
-            
-            # Pour certains terminés, on génère une Demande d'analyse au labo
+
+        if rdv_created and statut == 'termine':
+            compte_rendu = (
+                "Le patient présente des paramètres vitaux stables. "
+                "Prescription d'un traitement léger et repos recommandé."
+            )
+            Consultation.objects.create(rendez_vous=rdv, compte_rendu=compte_rendu, est_cloture=True)
+
             if random.choice([True, False]):
                 DemandeAnalyse.objects.create(
-                    hopital=m.user.hopital,
+                    hopital=h_lokossa,
                     laborantin=u_lab,
                     patient=p,
                     patient_nom=p.user.last_name,
@@ -188,13 +245,21 @@ def run():
                     patient_email=p.user.email,
                     patient_telephone=p.user.telephone or '',
                     type_analyse="NFS et Bilan lipidique",
-                    statut='en_cours'
+                    statut='en_cours',
                 )
 
-    print(f"--- [SUCCESS] Seed Final Exécuté ---")
-    print(f"Hôpitaux : {Hopital.objects.count()} (CNHU, CHUD, Parakou, Calavi, Mahouna)")
-    print(f"Admins Hôpital créés pour CNHU, CHUD et Mahouna")
-    print(f"Patients: {Patient.objects.count()} | Médecins: {Medecin.objects.count()} | RDV: {RendezVous.objects.count()}")
+    # ━━━  RÉSUMÉ  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    print(f"\n{'='*55}")
+    print(f"  ✅  Seed Final Exécuté avec Succès !")
+    print(f"{'='*55}")
+    print(f"  Hôpital      : {h_lokossa.nom}")
+    print(f"  Admin Hôpital: gillmarilin4@gmail.com")
+    print(f"  Médecins     : marionbdj9 (Cardio), akouemaho (Pédia), gillbadji (Neuro)")
+    print(f"  Laborantin   : marilinbadji@gmail.com")
+    print(f"  Patients     : {Patient.objects.count()}")
+    print(f"  RDV          : {RendezVous.objects.count()}")
+    print(f"{'='*55}")
+
 
 if __name__ == '__main__':
     run()
