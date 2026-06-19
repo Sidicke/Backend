@@ -24,30 +24,30 @@ python seed_memoire_final.py
 
 ## Comptes de Démonstration (Soutenance)
 
-| **Dr. Saidou MAMA** | `mama@HOPITEL.com` | Chirurgie Générale | CHU Parakou |
-| **Dr. René KODJO** | `kodjo@HOPITEL.com` | Gynécologie | HZ Calavi |
-| **Dr. Pierrette SOSSA** | `sossa@HOPITEL.com` | Gynécologie | HZ Calavi |
-| **Dr. Gérard ATI** | `ati@HOPITEL.com` | Gynécologie | HZ Calavi |
+### 🏥 1. Hôpital de Zone de Lokossa (Comptes Principaux)
+| Rôle | Nom | Email | Mot de passe | Spécialité / Info |
+|------|-----|-------|--------------|-------------------|
+| **Admin Hôpital** | Gill-Marilin BADJI | `gillmarilin4@gmail.com` | `AdminLokossa2025!` | Gestion HZ Lokossa |
+| **Médecin** | Marion BADJI | `marionbdj9@gmail.com` | `MedecinCardio2025!` | Cardiologue |
+| **Médecin** | Akoue-Maho GILL-CHRIST | `akouemahogillchristmarilinbadj@gmail.com` | `MedecinPedia2025!` | Pédiatre |
+| **Médecin** | Gill BADJI | `gillbadji@gmail.com` | `MedecinNeuro2025!` | Neurologue |
+| **Laborantin** | Marilin BADJI | `marilinbadji@gmail.com` | `LaboLokossa2025!` | Laboratoire HZ Lokossa |
 
-### 🧪 Laboratoires (BioTrack - 3 Laborantins)
-| Laborantin | Email | Établissement |
-|------------|-------|---------------|
-| **Paul DOSSOU-LAB** | `lab.cnhu@HOPITEL.com` | CNHU-HKM Cotonou |
-| **Anne MARIE-LAB** | `lab.chud@HOPITEL.com` | CHUD Porto-Novo |
-| **Abdou RAMANE-LAB** | `lab.parakou@HOPITEL.com` | CHU Parakou |
+### 🏥 2. Autres Établissements
+| Dr. Jean DOSSOU | `dr.dossou@hopitel.com` | `MedecinDossou123!` | Cardiologie | CNHU-HKM Cotonou |
+| Dr. Marie TOSSOU | `dr.tossou@hopitel.com` | `TossouPedia!99` | Pédiatrie | Clinique Mahouna |
+| Dr. Paul AMOUSSOU | `dr.amoussou@hopitel.com` | `AmoussouGyn!25` | Gynécologie | CHUD Porto-Novo |
+| Laboratoire CNHU | `labo.agbo@hopitel.com` | `AgboLabo229#` | Laborantin | CNHU-HKM Cotonou |
 
 ### 👤 Patients (Scénarios de test variés)
-| Patient | Email | Scénario de Test |
-|---------|-------|------------------|
-| **Sidicke TRAORE** | `sidicke@HOPITEL.com` | **Complet** : RDV terminé, Rapport médical, Analyses, Chat. |
-| **Alice BENIN** | `patient2@HOPITEL.com` | **Urgence** : RDV en attente de validation. |
-| **Bob CANCEL** | `patient3@HOPITEL.com` | **Historique** : Patient ayant des RDV annulés. |
-| **Claire LABO** | `patient4@HOPITEL.com` | **BioTrack** : Analyse en cours (Glycémie). |
-| **David INTAKE** | `patient5@HOPITEL.com` | **Pré-enregistrement** : Dossier symptômes déjà rempli. |
-| **Eve NEW** | `patient6@HOPITEL.com` | **Nouveau** : Compte vide, sans historique. |
+| Patient | Email | Mot de passe | Scénario de Test |
+|---------|-------|--------------|------------------|
+| **Sidicke TRAORÉ** | `sidicke@hopitel.com` | `PatientSidicke01` | **Complet** : RDV terminé, Rapport médical, Analyses. |
+| **Koffi MENSAH** | `koffi@hopitel.com` | `PatientKoffi02` | **En attente** : RDV à venir et RDV terminé. |
+| **Amina SALIU** | `amina@hopitel.com` | `PatientAmina03` | **Historique** : RDV récent et annulé. |
 
 > [!TIP]
-> Pour une démonstration fluide : connectez-vous d'abord en tant que **Sidicke** pour montrer l'historique riche, puis avec le **Dr. Dossou** pour voir le dashboard médecin.
+> Pour une démonstration fluide : connectez-vous avec `marionbdj9@gmail.com` (Médecin) pour voir le dashboard médecin, puis avec `marilinbadji@gmail.com` (Laborantin) pour gérer les analyses de BioTrack.
 
 ## Structure du projet
 
