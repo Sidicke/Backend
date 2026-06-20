@@ -41,7 +41,7 @@ def send_whatsapp_message(phone, message):
     
     # Redirection globale en mode soutenance
     if getattr(settings, 'SOUTENANCE_MODE', False):
-        clean_phone = settings.SOUTENANCE_WHATSAPP
+        clean_phone = format_whatsapp_phone(settings.SOUTENANCE_WHATSAPP)
 
     if not clean_phone:
         return {"success": False, "error": "Numero de telephone invalide"}

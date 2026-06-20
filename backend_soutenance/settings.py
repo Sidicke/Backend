@@ -173,11 +173,12 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@HOPITEL-benin.com')
 BREVO_API_KEY = config('BREVO_API_KEY', default='')
 
-# URL du frontend
-FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:8080')
+# URL du frontend (Lien de l'application cliente - si c'est une app web)
+FRONTEND_URL = config('FRONTEND_URL', default='https://enligne.onrender.com')
 
-# URL du backend (pour les liens de validation d'emails qui doivent ouvrir une page web sur le backend)
-BACKEND_URL = config('BACKEND_URL', default='http://localhost:8000')
+# URL du backend (pour les liens de réinitialisation/validation qui tapent l'API Django)
+# L'utilisateur a précisé que c'est la version en ligne, on fixe l'URL Render en dur.
+BACKEND_URL = config('BACKEND_URL', default='https://backend-x5yj.onrender.com')
 
 # URL du service WhatsApp (Microservice Node.js)
 WHATSAPP_SERVICE_URL = config('WHATSAPP_SERVICE_URL', default='http://localhost:3001')

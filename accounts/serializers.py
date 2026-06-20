@@ -87,6 +87,29 @@ class PatientRegisterSerializer(serializers.ModelSerializer):
             'date_naissance', 'sexe',
             'contact_urgence_nom', 'contact_urgence_tel',
         ]
+        extra_kwargs = {
+            'email': {'validators': []}
+        }
+
+    def validate_email(self, value):
+        from django.utils import timezone
+        from datetime import timedelta
+        value = value.lower()
+        try:
+            user = User.objects.get(email=value)
+            if user.is_email_verified or user.is_active:
+                raise serializers.ValidationError("Cette adresse email est déjà enregistrée et valide.")
+            
+            # Si le compte est inactif et non vérifié depuis plus de 2 heures, on le libère
+            if user.date_joined <= timezone.now() - timedelta(hours=2):
+                user.delete()
+            else:
+                raise serializers.ValidationError(
+                    "Une inscription est déjà en cours avec cet email. Veuillez valider votre compte, ou réessayer dans 2 heures. "
+                )
+        except User.DoesNotExist:
+            pass
+        return value
 
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
