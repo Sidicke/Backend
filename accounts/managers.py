@@ -8,7 +8,8 @@ class UserManager(BaseUserManager):
         """Crée et retourne un utilisateur avec email et mot de passe."""
         if not email:
             raise ValueError("L'adresse email est obligatoire.")
-        email = self.normalize_email(email)
+        # On force la mise en minuscule de tout l'email pour éviter les doublons (ex: Aboubakar vs aboubakar)
+        email = self.normalize_email(email).lower()
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)

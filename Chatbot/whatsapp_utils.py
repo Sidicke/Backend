@@ -5,25 +5,26 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 def format_whatsapp_phone(phone):
-    """Nettoie et formate automatique le numéro pour WhatsApp (surtout Bénin)."""
+    """Nettoie et formate automatiquement le numéro pour WhatsApp (surtout Bénin)."""
     if not phone:
         return ""
-    clean_phone = "".join(filter(str.isdigit, str(phone)))
+    clean = "".join(filter(str.isdigit, str(phone)))
     
-    # Format international déjà correct avec 229+8 chiffres (ex: 22997XXXXXX = 11 chiffres)
-    if len(clean_phone) == 11 and clean_phone.startswith('229') and not clean_phone.startswith('22901'):
-        return clean_phone  # Déjà bon, on ne touche pas
-    # Format 229 + 01 + 8 chiffres (ex: 22901XXXXXXXX) → on retire le 01
-    if len(clean_phone) == 13 and clean_phone.startswith('22901'):
-        return "229" + clean_phone[5:]
-    # Nouveau format Bénin 10 chiffres (ex: 0197XXXXXX)
-    if len(clean_phone) == 10 and clean_phone.startswith('01'):
-        return "229" + clean_phone[2:]
-    # Ancien format local à 8 chiffres
-    if len(clean_phone) == 8:
-        return "229" + clean_phone
-
-    return clean_phone
+    # Strip l'indicatif 229 s'il est présent
+    if clean.startswith("229"):
+        clean = clean[3:]
+        
+    # Strip le préfixe 01 s'il est présent
+    if clean.startswith("01"):
+        clean = clean[2:]
+        
+    # À ce stade, pour un numéro béninois valide, on doit avoir 8 chiffres
+    if len(clean) == 8:
+        return "229" + clean
+        
+    # Si le format ne correspond pas à 8 chiffres (numéro étranger ou autre)
+    # on retourne simplement les chiffres initiaux
+    return "".join(filter(str.isdigit, str(phone)))
 
 def send_whatsapp_message(phone, message):
     """
