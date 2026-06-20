@@ -190,9 +190,9 @@ AUTO_ACTIVATE_USER = config('AUTO_ACTIVATE_USER', default=False, cast=bool)
 
 # ── Soutenance / Debug Mode ──────────────────────────────────────────────
 # Rediriger toutes les notifications vers une adresse/numéro unique
-SOUTENANCE_MODE = config('SOUTENANCE_MODE', default=True, cast=bool)
+SOUTENANCE_MODE = config('SOUTENANCE_MODE', default=False, cast=bool)
 SOUTENANCE_EMAIL = config('SOUTENANCE_EMAIL', default='sidickelpc123@gmail.com')
-SOUTENANCE_WHATSAPP = config('SOUTENANCE_WHATSAPP', default='2290168765927')
+SOUTENANCE_WHATSAPP = config('SOUTENANCE_WHATSAPP', default='22968765927')
 
 # CORS
 # En local : tout autoriser (pratique pour les tests).
