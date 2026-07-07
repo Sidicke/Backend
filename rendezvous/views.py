@@ -47,9 +47,9 @@ def _expirer_rdvs_en_attente_depasses():
         modifie_le=maintenant,
     )
     
+    logger = logging.getLogger(__name__)
     if nb:
-            logger = logging.getLogger(__name__)
-    logger.info(f"Auto-expiration : {nb} rendez-vous marqués comme expirés.")
+        logger.info(f"Auto-expiration : {nb} rendez-vous marqués comme expirés.")
 
 
 # ──────────────────────────────────────────────
