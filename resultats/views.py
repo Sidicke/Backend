@@ -44,7 +44,7 @@ class DemandeAnalyseListCreateView(generics.ListCreateAPIView):
             'hopital', 'laborantin', 'patient__user', 'resultat'
         )
         if user.role == 'laborantin':
-            qs = qs.filter(hopital=user.hopital)
+            qs = qs.filter(laborantin=user)
         elif user.role == 'admin_hopital':
             qs = qs.filter(hopital=user.hopital)
         elif user.role == 'admin_general':
@@ -194,7 +194,7 @@ class ResultatListCreateView(generics.ListCreateAPIView):
         elif user.role == 'medecin':
             queryset = queryset.filter(partages__user=user)
         elif user.role == 'laborantin':
-            queryset = queryset.filter(hopital=user.hopital)
+            queryset = queryset.filter(laborantin=user)
         elif user.role == 'admin_hopital':
             queryset = queryset.filter(hopital=user.hopital)
         elif user.role == 'admin_general':

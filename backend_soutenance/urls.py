@@ -22,6 +22,7 @@ urlpatterns = [
     path('api/chatbot/', include('Chatbot.urls')),
 ]
 
-# Servir les fichiers médias en développement
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Servir les fichiers médias (nécessaire pour le téléchargement local sur Render)
+# Même en production, on sert les médias depuis le disque éphémère.
+# Note : les fichiers sont perdus au redémarrage de Render.
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

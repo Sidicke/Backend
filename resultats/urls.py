@@ -10,6 +10,10 @@ urlpatterns = [
     path('analyses/<int:pk>/cloturer/', views.DemandeAnalyseCloturerView.as_view(), name='analyse-cloturer'),
     path('laborantins/patients/', views.LaborantinPatientListView.as_view(), name='laborantin-patient-list'),
 
+    # Alias pour l'APK mobile (URLs utilisées par la version compilée)
+    path('accounts/laborantins/patients/', views.LaborantinPatientListView.as_view(), name='laborantin-patient-list-alias-accounts'),
+    path('hopitaux/laborantin/patients/', views.LaborantinPatientListView.as_view(), name='laborantin-patient-list-alias-hopitaux'),
+
     # ── Résultats ─────────────────────────────────────────────────────────────
     path('resultats/', views.ResultatListCreateView.as_view(), name='resultat-list-create'),
     path('resultats/<int:pk>/', views.ResultatDetailView.as_view(), name='resultat-detail'),
