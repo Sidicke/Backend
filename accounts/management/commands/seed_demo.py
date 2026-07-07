@@ -50,6 +50,7 @@ class Command(BaseCommand):
             # Liste des noms d'hôpitaux (README + anciens noms pour nettoyage)
             demo_hopitaux_noms = [
                 'CNHU-HKM (Cotonou)', 'CHUD Porto-Novo', 'CHU Parakou', 'Hôpital de Zone (Calavi)',
+                'Hôpital de Zone de Lokossa',
                 # Anciens noms à supprimer pour éviter les doublons
                 'CHU de Cotonou', 'Hôpital de Zone de Porto-Novo', 'Hôpital de Zone de Parakou',
                 'Clinique Autonome d\'Abomey', 'CHUD Porto Novo', 'CHU de Parakou'
@@ -75,6 +76,7 @@ class Command(BaseCommand):
                 'lab.cnhu@hopitel.com', 'lab.chud@hopitel.com', 'lab.parakou@hopitel.com',
                 'sidicke@hopitel.com', 'patient2@hopitel.com', 'patient3@hopitel.com',
                 'patient4@hopitel.com', 'patient5@hopitel.com', 'patient6@hopitel.com',
+                'marionbdj9@gmail.com', 'marilinbadji@gmail.com',
             ]
             # Suppression insensible à la casse pour éviter les conflits
             for email in demo_emails:
@@ -120,6 +122,14 @@ class Command(BaseCommand):
             description='Hôpital de zone d\'Abomey-Calavi / Sô-Ava',
             latitude=6.4469, longitude=2.3524,
         )
+        h5 = self._hopital(
+            nom='Hôpital de Zone de Lokossa',
+            adresse='Lokossa',
+            ville='Lokossa', telephone='+22922310000',
+            email='contact@hz-lokossa.bj',
+            description='Hôpital de zone de Lokossa / Mono',
+            latitude=6.6350, longitude=1.7160,
+        )
 
         # --- 2. SERVICES & MÉDECINS (SYNC DYNAMIQUE) ---
         self.stdout.write('\n[DEMO] === 2. Services & Médecins (Sync) ===')
@@ -148,6 +158,8 @@ class Command(BaseCommand):
             (h4, 'kodjo@hopitel.com', 'René', 'KODJO', gynecologie, 'MED-BJ-010'),
             (h4, 'sossa@hopitel.com', 'Pierrette', 'SOSSA', medecine_gen, 'MED-BJ-011'),
             (h4, 'ati@hopitel.com', 'Gérard', 'ATI', gynecologie, 'MED-BJ-012'),
+            # Hôpital de Zone de Lokossa
+            (h5, 'marionbdj9@gmail.com', 'Marion', 'BADJI', cardiologie, 'MED-BJ-013'),
         ]
 
         hopital_service_requirements = {}
@@ -170,8 +182,17 @@ class Command(BaseCommand):
                     hopital_service_requirements[hop.id] = set()
                 hopital_service_requirements[hop.id].add(svc.id)
 
+        # Mise à jour du téléphone spécifique pour Marion BADJI
+        try:
+            marion_user = User.objects.get(email__iexact='marionbdj9@gmail.com')
+            marion_user.telephone = '+22962654680'
+            marion_user.save()
+            self.stdout.write('  [ok]   Téléphone Marion BADJI mis à jour : +22962654680')
+        except User.DoesNotExist:
+            pass
+
         # 2. Synchronisation des Services (Seuls ceux AVEC médecin sont gardés)
-        for hopital in [h1, h2, h3, h4]:
+        for hopital in [h1, h2, h3, h4, h5]:
             required_service_ids = hopital_service_requirements.get(hopital.id, set())
             for svc_id in required_service_ids:
                 HopitalService.objects.get_or_create(hopital=hopital, service_id=svc_id)
@@ -198,9 +219,11 @@ class Command(BaseCommand):
         self._user(email='lab.cnhu@hopitel.com', first_name='Paul', last_name='DOSSOU-LAB', role='laborantin', hopital=h1, telephone='+22992000001', date_naissance=date(1990,1,1), sexe='M')
         self._user(email='lab.chud@hopitel.com', first_name='Anne', last_name='MARIE-LAB', role='laborantin', hopital=h2, telephone='+22992000002', date_naissance=date(1990,1,1), sexe='F')
         self._user(email='lab.parakou@hopitel.com', first_name='Abdou', last_name='RAMANE-LAB', role='laborantin', hopital=h3, telephone='+22992000003', date_naissance=date(1990,1,1), sexe='M')
+        # Lokossa
+        self._user(email='marilinbadji@gmail.com', first_name='Marilin', last_name='BADJI', role='laborantin', hopital=h5, telephone='+22967174369', date_naissance=date(1992,3,15), sexe='F')
 
         # Patients
-        p_sidicke = self._user(email='sidicke@hopitel.com', first_name='Sidicke', last_name='TRAORE', role='patient', telephone='+22993000001', date_naissance=date(1995,1,1), sexe='M')
+        p_sidicke = self._user(email='sidicke@hopitel.com', first_name='Sidicke', last_name='TRAORE', role='patient', telephone='+22953061173', date_naissance=date(1995,1,1), sexe='M')
         p_alice = self._user(email='patient2@hopitel.com', first_name='Alice', last_name='BENIN', role='patient', telephone='+22993000002', date_naissance=date(1992,1,1), sexe='F')
         p_bob = self._user(email='patient3@hopitel.com', first_name='Bob', last_name='CANCEL', role='patient', telephone='+22993000003', date_naissance=date(1990,1,1), sexe='M')
         p_claire = self._user(email='patient4@hopitel.com', first_name='Claire', last_name='LABO', role='patient', telephone='+22993000004', date_naissance=date(1994,1,1), sexe='F')
@@ -271,7 +294,7 @@ class Command(BaseCommand):
         create_notification(dr_dossou.user, 'nouveau_message', 'Vous avez reçu un nouveau message de Sidicke TRAORE.', lien=f"/api/consultations/{cons.pk}/")
 
         self._sep()
-        self.stdout.write(self.style.SUCCESS('[DEMO] Seed fini ! Les 4 hôpitaux ont tous des services. 🎉'))
+        self.stdout.write(self.style.SUCCESS('[DEMO] Seed fini ! Les 5 hôpitaux ont tous des services. 🎉'))
 
     # ── Helpers ──────────────────────────────────────────────────────────────────
     def _hopital(self, nom, **kwargs):
