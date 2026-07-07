@@ -30,15 +30,16 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    # Cloudinary doit être APRÈS django.contrib.staticfiles
+    'cloudinary_storage',
     'django.contrib.staticfiles',
-    # Applications tierces
+    'cloudinary',
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
     'channels',
-    'storages',  # django-storages (Backblaze B2 / S3)
     # Applications du projet
     'accounts',
     'hopitaux',
@@ -133,14 +134,15 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# ── Stockage local (disque Render) ──────────────────────────────────────────
-# Le stockage Backblaze B2 (S3) a été désactivé car les clés étaient invalides.
-# Les fichiers sont stockés sur le disque éphémère de Render.
-# Ils seront perdus au redémarrage du service, mais l'application ne crashe plus.
+# ── Stockage Cloudinary ───────────────────────────────────────────────────
+# Les fichiers (images, PDFs, audios) sont stockés sur Cloudinary via CDN.
+# Les fichiers ne sont plus perdus au redémarrage du service.
+
+CLOUDINARY_URL = config('CLOUDINARY_URL', default='cloudinary://797882343729536:P5GqWB1ZGCDvxvvQYq5b9ca0dcA@tjygr0uv')
 
 STORAGES = {
     'default': {
-        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
     },
     'staticfiles': {
         'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',

@@ -1,6 +1,6 @@
 """
 Utilitaires pour le téléchargement des fichiers.
-Stockage local utilisé (disque Render).
+Stockage Cloudinary utilisé (CDN).
 """
 
 import logging
@@ -14,21 +14,23 @@ DOWNLOAD_URL_EXPIRE_SECONDS = 3600  # 1 heure
 
 def generer_url_telechargement(fichier_field):
     """
-    Génère l'URL de téléchargement d'un fichier stocké localement.
-    Retourne une URL directe vers le backend Django qui servira le fichier
-    via le endpoint /api/resultats/<pk>/telecharger/ ou l'URL statique.
+    Génère l'URL de téléchargement d'un fichier stocké sur Cloudinary.
+    Retourne une URL Cloudinary (CDN) directe.
 
     Args:
         fichier_field: Un objet FileField / FieldFile Django (ex: resultat.fichier)
 
     Retourne:
-        str ou None: L'URL de téléchargement directe.
+        str ou None: L'URL de téléchargement directe (Cloudinary CDN).
     """
     if not fichier_field:
         return None
 
-    # URL directe vers le fichier servi par Django
+    # Cloudinary génère directement une URL CDN complète via fichier.url
     if hasattr(fichier_field, 'url') and fichier_field.url:
-        return settings.BACKEND_URL.rstrip('/') + fichier_field.url
+        url = fichier_field.url
+        # L'URL Cloudinary est déjà complète (https://res.cloudinary.com/...)
+        # On la retourne telle quelle
+        return url
 
     return None
