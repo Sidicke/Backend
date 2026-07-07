@@ -25,7 +25,7 @@ echo "────────────────────────�
 echo "[BUILD] Nettoyage des comptes inactifs (non validés)..."
 echo "────────────────────────────────────────────────────"
 python -c "import os, django; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend_soutenance.settings'); django.setup(); from django.contrib.auth import get_user_model; get_user_model().objects.filter(is_active=False, is_email_verified=False).delete()"
-python seed_memoire_final.py
+# python seed_memoire_final.py — supprimé car le fichier a été nettoyé
 
 echo ""
 echo "────────────────────────────────────────────────────"
