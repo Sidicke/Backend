@@ -420,7 +420,7 @@ class LaborantinPatientListView(generics.ListAPIView):
             statut='termine'
         ).values_list('patient_id', flat=True).distinct()
         
-        return Patient.objects.filter(id__in=patient_ids).select_related('user')
+        return Patient.objects.filter(user_id__in=patient_ids).select_related('user')
 
     def get_serializer_class(self):
         from accounts.serializers import PatientListSerializer
