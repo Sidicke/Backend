@@ -2,6 +2,7 @@ from rest_framework import serializers
 
 from accounts.models import Medecin, Patient
 from .models import DemandeAnalyse, Resultat
+from .utils import generer_url_telechargement
 
 
 # ──────────────────────────────────────────────
@@ -95,6 +96,7 @@ class ResultatSerializer(serializers.ModelSerializer):
     consultation_id = serializers.IntegerField(source='consultation.pk', read_only=True, default=None)
     hopital_nom = serializers.CharField(source='hopital.nom', read_only=True, default=None)
     medecins_partages = serializers.SerializerMethodField()
+    url_telechargement = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Resultat
@@ -105,6 +107,7 @@ class ResultatSerializer(serializers.ModelSerializer):
             'date_analyse', 'date_depot', 'code_acces', 'laboratoire',
             'patient_nom_externe', 'patient_email_externe',
             'medecins_partages',
+            'url_telechargement',
         ]
         read_only_fields = ['id', 'date_depot', 'code_acces', 'laborantin', 'hopital']
 
@@ -116,6 +119,9 @@ class ResultatSerializer(serializers.ModelSerializer):
             {'id': m.pk, 'nom': m.user.get_full_name()}
             for m in obj.partages.select_related('user').all()
         ]
+
+    def get_url_telechargement(self, obj):
+        return generer_url_telechargement(obj.fichier if obj else None)
 
 
 class ResultatCreateSerializer(serializers.ModelSerializer):
@@ -176,15 +182,20 @@ class ResultatPublicSerializer(serializers.ModelSerializer):
     """Serializer pour l'accès public via code (informations limitées)."""
 
     patient_nom = serializers.SerializerMethodField()
+    url_telechargement = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Resultat
         fields = [
             'id', 'patient_nom', 'titre', 'fichier',
             'date_analyse', 'date_depot', 'laboratoire', 'code_acces',
+            'url_telechargement',
         ]
 
     def get_patient_nom(self, obj):
         return obj.patient_display_nom
+
+    def get_url_telechargement(self, obj):
+        return generer_url_telechargement(obj.fichier if obj else None)
 
 

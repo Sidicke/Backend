@@ -57,6 +57,7 @@ class RendezVous(models.Model):
         ANNULE = 'annule', 'Annulé'
         REFUSE = 'refuse', 'Refusé'
         TERMINE = 'termine', 'Terminé'
+        EXPIRE = 'expire', 'Expiré'
 
     patient = models.ForeignKey(
         'accounts.Patient', on_delete=models.CASCADE, related_name='rendezvous'

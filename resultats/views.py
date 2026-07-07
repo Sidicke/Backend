@@ -20,6 +20,7 @@ from .serializers import (
     ResultatSerializer, ResultatCreateSerializer,
     PartageSerializer, ResultatPublicSerializer,
 )
+from .utils import DOWNLOAD_URL_EXPIRE_SECONDS, generer_url_telechargement
 
 
 # ──────────────────────────────────────────────
@@ -358,6 +359,47 @@ class ResultatAccesCodeView(APIView):
 
         serializer = ResultatPublicSerializer(resultat)
         return Response(serializer.data)
+
+
+# ──────────────────────────────────────────────
+# Téléchargement via URL signée (pour l'APK mobile)
+# ──────────────────────────────────────────────
+
+class ResultatDownloadUrlView(APIView):
+    """
+    Endpoint dédié à l'APK mobile.
+    Retourne une URL de téléchargement signée (valable 1h) pour le fichier.
+    GET /api/resultats/<pk>/download-url/
+    """
+
+    permission_classes = [IsAuthenticated, IsResultatAccessible]
+
+    def get(self, request, pk):
+        try:
+            resultat = Resultat.objects.get(pk=pk)
+        except Resultat.DoesNotExist:
+            return Response({'error': 'Résultat introuvable.'}, status=status.HTTP_404_NOT_FOUND)
+
+        self.check_object_permissions(request, resultat)
+
+        if not resultat.fichier:
+            return Response({'error': 'Aucun fichier associé.'}, status=status.HTTP_404_NOT_FOUND)
+
+        url = generer_url_telechargement(resultat.fichier)
+
+        if not url:
+            return Response(
+                {'error': 'Impossible de générer le lien de téléchargement.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response({
+            'id': resultat.pk,
+            'titre': resultat.titre,
+            'nom_fichier': resultat.fichier.name.split('/')[-1],
+            'download_url': url,
+            'expire_en_secondes': DOWNLOAD_URL_EXPIRE_SECONDS,
+        })
 
 
 class LaborantinPatientListView(generics.ListAPIView):

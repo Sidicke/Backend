@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'channels',
+    'storages',  # django-storages (Backblaze B2 / S3)
     # Applications du projet
     'accounts',
     'hopitaux',
@@ -131,6 +132,47 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# ── Stockage Cloud (Backblaze B2 via S3) ────────────────────────────────────
+# Remplace le stockage local par du stockage S3-compatible (Backblaze B2)
+# pour que les fichiers soient persistants sur Render (disque éphémère).
+# Si B2_KEY_ID est vide/absent, on garde le stockage local (développement).
+
+B2_KEY_ID = config('B2_KEY_ID', default='')
+
+if B2_KEY_ID:
+    STORAGES = {
+        'default': {
+            'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
+
+    AWS_ACCESS_KEY_ID = B2_KEY_ID
+    AWS_SECRET_ACCESS_KEY = config('B2_APPLICATION_KEY', default='')
+    AWS_STORAGE_BUCKET_NAME = config('B2_BUCKET_NAME', default='hopitel-media')
+    AWS_S3_ENDPOINT_URL = config('B2_ENDPOINT', default='https://s3.us-west-004.backblazeb2.com')
+    AWS_S3_REGION_NAME = config('B2_REGION', default='us-west-004')
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'max-age=86400',
+    }
+    AWS_DEFAULT_ACL = 'private'
+    AWS_QUERYSTRING_AUTH = False
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
+    AWS_S3_ADDRESSING_STYLE = 'path'
+    AWS_LOCATION = 'media'
+else:
+    # Fallback : stockage local pour le développement
+    STORAGES = {
+        'default': {
+            'BACKEND': 'django.core.files.storage.FileSystemStorage',
+        },
+        'staticfiles': {
+            'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+        },
+    }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

@@ -9,6 +9,8 @@ from rest_framework.views import APIView
 
 from accounts.models import Medecin
 from accounts.permissions import IsAdminGeneral, IsMedecin, IsPatient, IsMedecinOrAdminGeneral
+import logging
+
 from notifications.utils import create_notification
 from Chatbot.whatsapp_utils import send_whatsapp_message
 from .models import Disponibilite, RendezVous, Consultation
@@ -22,6 +24,32 @@ from .serializers import (
     ConsultationSerializer, ConsultationUpdateSerializer,
 )
 from .utils import generer_creneaux
+
+
+# ── Auto-expiration des rendez-vous en attente et dépassés ──────────────
+# À chaque fois qu'un utilisateur consulte la liste ou le détail des RDV,
+# ceux en attente dont l'heure est dépassée (≥ 2h) passent automatiquement
+# en statut "expiré". Pas besoin de cron.
+
+def _expirer_rdvs_en_attente_depasses():
+    """
+    Marque comme 'expire' les rendez-vous en attente dont l'heure
+    est dépassée d'au moins 2 heures.
+    """
+    maintenant = timezone.now()
+    date_limite = maintenant - timedelta(hours=2)
+    
+    nb = RendezVous.objects.filter(
+        statut=RendezVous.Statut.EN_ATTENTE,
+        date_heure__lte=date_limite,
+    ).update(
+        statut=RendezVous.Statut.EXPIRE,
+        modifie_le=maintenant,
+    )
+    
+    if nb:
+            logger = logging.getLogger(__name__)
+    logger.info(f"Auto-expiration : {nb} rendez-vous marqués comme expirés.")
 
 
 # ──────────────────────────────────────────────
@@ -144,6 +172,8 @@ class RendezVousListCreateView(generics.ListCreateAPIView):
     ordering_fields = ['date_heure', 'cree_le']
 
     def get_queryset(self):
+        # Auto-expiration des RDV en attente et dépassés
+        _expirer_rdvs_en_attente_depasses()
         user = self.request.user
         queryset = RendezVous.objects.select_related(
             'patient__user', 'medecin__user', 'pre_enregistrement'
@@ -207,6 +237,10 @@ class RendezVousDetailView(generics.RetrieveAPIView):
     queryset = RendezVous.objects.select_related('patient__user', 'medecin__user').prefetch_related('consultation')
     serializer_class = RendezVousSerializer
     permission_classes = [IsAuthenticated, IsRendezVousParticipant]
+
+    def get_queryset(self):
+        _expirer_rdvs_en_attente_depasses()
+        return super().get_queryset()
 
 
 class RendezVousConfirmerView(APIView):
