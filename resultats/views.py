@@ -1,7 +1,8 @@
+import threading
+
 from django.conf import settings
 from django.db.models import Q
 from django.core.mail import send_mail
-from django.http import FileResponse
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.html import strip_tags
@@ -67,6 +68,71 @@ class DemandeAnalyseListCreateView(generics.ListCreateAPIView):
         return DemandeAnalyseSerializer
 
 
+def _send_notifications_async(resultat_id, demande_id, titre):
+    """
+    Envoi asynchrone des e-mails, des notifications push/WebSocket 
+    et du code unique par WhatsApp (Baileys) pour optimiser les performances.
+    """
+    try:
+        resultat = Resultat.objects.select_related('hopital', 'patient__user').get(pk=resultat_id)
+        demande = DemandeAnalyse.objects.get(pk=demande_id)
+    except Exception:
+        return
+
+    # 1. Envoi Email au patient (externe ou inscrit)
+    email_dest = demande.patient_email
+    if email_dest:
+        try:
+            nom_patient = f"{demande.patient_prenom} {demande.patient_nom}"
+            html_message = render_to_string('resultats/emails/nouveau_resultat.html', {
+                'resultat': resultat,
+                'nom_patient': nom_patient,
+                'hopital': resultat.hopital,
+            })
+            send_mail(
+                subject=f"[{resultat.hopital.code_court}] Vos resultats d'analyse sont disponibles",
+                message=strip_tags(html_message),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email_dest],
+                html_message=html_message,
+                fail_silently=True,
+            )
+        except Exception:
+            pass
+
+    # 2. Diffusion Temps réel (WebSockets / Push FCM) si patient connecté
+    patient_link = resultat.patient
+    if patient_link:
+        try:
+            create_notification(
+                user=patient_link.user,
+                type='nouveau_resultat',
+                message=f"Vos resultats d'analyse ({titre}) sont disponibles. Code : {resultat.code_acces}",
+                lien=f"/api/resultats/{resultat.pk}/",
+            )
+        except Exception:
+            pass
+
+    # 3. Envoi WhatsApp (Patient) — utilise format_whatsapp_phone pour un formatage fiable
+    try:
+        tel = patient_link.user.telephone if patient_link else None
+        if not tel:
+            tel = demande.patient_telephone
+
+        if tel:
+            nom_patient = f"{demande.patient_prenom} {demande.patient_nom}"
+            msg = (
+                f"🔬 *Résultats Disponibles* ({resultat.hopital.code_court})\n\n"
+                f"Bonjour {nom_patient},\n"
+                f"Vos résultats d'analyse pour « *{titre}* » sont prêts.\n"
+                f"Code d'accès unique : *{resultat.code_acces}*\n\n"
+                f"Conservez précieusement ce code pour télécharger et consulter vos résultats."
+            )
+            send_whatsapp_message(tel, msg)
+    except Exception:
+        pass
+
+
 class DemandeAnalyseCloturerView(APIView):
     """
     Clôturer une demande d'analyse : déposer le fichier résultat.
@@ -119,48 +185,12 @@ class DemandeAnalyseCloturerView(APIView):
         demande.date_cloture = timezone.now()
         demande.save(update_fields=['resultat', 'statut', 'date_cloture'])
 
-        # Envoyer email au patient
-        email_dest = demande.patient_email
-        nom_patient = f"{demande.patient_prenom} {demande.patient_nom}"
-        try:
-            html_message = render_to_string('resultats/emails/nouveau_resultat.html', {
-                'resultat': resultat,
-                'nom_patient': nom_patient,
-                'hopital': demande.hopital,
-            })
-            send_mail(
-                subject=f"[{demande.hopital.code_court}] Vos resultats d'analyse sont disponibles",
-                message=strip_tags(html_message),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email_dest],
-                html_message=html_message,
-                fail_silently=True,
-            )
-        except Exception:
-            pass  # On ne bloque pas si l'email échoue
-
-        # Notification si patient inscrit
-        if patient_link:
-            create_notification(
-                user=patient_link.user,
-                type='nouveau_resultat',
-                message=f"Vos resultats d'analyse ({titre}) sont disponibles. Code : {resultat.code_acces}",
-                lien=f"/api/resultats/{resultat.pk}/",
-            )
-
-        # Envoi notification WhatsApp (Patient)
-        try:
-            tel = patient_link.user.telephone if patient_link else None
-            if tel:
-                clean_phone = "".join(filter(str.isdigit, str(tel)))
-                msg = (
-                    f"🔬 Résultats Disponibles ({resultat.hopital.code_court})\n\n"
-                    f"Vos résultats d'analyse pour « {titre} » sont prêts.\n"
-                    f"Code d'accès : *{resultat.code_acces}*"
-                )
-                send_whatsapp_message(clean_phone, msg)
-        except Exception:
-            pass
+        # Lancer les notifications asynchrones (non bloquantes) dans un thread séparé
+        threading.Thread(
+            target=_send_notifications_async,
+            args=(resultat.pk, demande.pk, titre),
+            daemon=True
+        ).start()
 
         return Response(
             {
@@ -170,6 +200,7 @@ class DemandeAnalyseCloturerView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
 
 
 # ──────────────────────────────────────────────
@@ -261,7 +292,7 @@ class ResultatTelechargerView(APIView):
 
     def get(self, request, pk):
         try:
-            resultat = Resultat.objects.get(pk=pk)
+            resultat = Resultat.objects.only('fichier', 'titre').get(pk=pk)
         except Resultat.DoesNotExist:
             return Response({'error': 'Résultat introuvable.'}, status=status.HTTP_404_NOT_FOUND)
 
@@ -270,12 +301,17 @@ class ResultatTelechargerView(APIView):
         if not resultat.fichier:
             return Response({'error': 'Aucun fichier associé.'}, status=status.HTTP_404_NOT_FOUND)
 
-        return FileResponse(
-            resultat.fichier.open('rb'),
-            content_type='application/pdf',
-            as_attachment=True,
-            filename=f"{resultat.titre}.pdf",
-        )
+        # Le fichier est stocké sur Cloudinary — on redirige vers l'URL CDN
+        url = generer_url_telechargement(resultat.fichier)
+        if not url:
+            return Response(
+                {'error': 'Impossible de générer le lien de téléchargement.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        from django.shortcuts import redirect
+        return redirect(url)
+
 
 
 # ──────────────────────────────────────────────

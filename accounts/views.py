@@ -382,7 +382,8 @@ class UserMeView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
-        return self.request.user
+        # Optimisation : précharger hopital + profils liés pour éviter les N+1 queries
+        return User.objects.select_related('hopital').get(pk=self.request.user.pk)
 
 
 # ──────────────────────────────────────────────

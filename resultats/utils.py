@@ -29,8 +29,10 @@ def generer_url_telechargement(fichier_field):
     # Cloudinary génère directement une URL CDN complète via fichier.url
     if hasattr(fichier_field, 'url') and fichier_field.url:
         url = fichier_field.url
-        # L'URL Cloudinary est déjà complète (https://res.cloudinary.com/...)
-        # On la retourne telle quelle
+        # Force le téléchargement (pièce jointe) au lieu de l'affichage natif dans le navigateur
+        if "res.cloudinary.com" in url and "/upload/" in url and "/fl_attachment" not in url:
+            url = url.replace("/upload/", "/upload/fl_attachment/")
         return url
 
     return None
+

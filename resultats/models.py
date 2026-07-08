@@ -48,7 +48,7 @@ class DemandeAnalyse(models.Model):
     # Informations patient (obligatoires — pour les non-inscrits ou doublon de référence)
     patient_nom = models.CharField('nom du patient', max_length=100)
     patient_prenom = models.CharField('prénom du patient', max_length=100)
-    patient_email = models.EmailField('email du patient')
+    patient_email = models.EmailField('email du patient', db_index=True)
     patient_telephone = models.CharField('téléphone du patient', max_length=20, blank=True, default='')
     patient_ddn = models.DateField('date de naissance du patient', null=True, blank=True)
 
@@ -62,6 +62,7 @@ class DemandeAnalyse(models.Model):
     statut = models.CharField(
         'statut', max_length=20,
         choices=Statut.choices, default=Statut.EN_COURS,
+        db_index=True,
     )
     date_inscription = models.DateTimeField('date d\'inscription', auto_now_add=True)
     date_cloture = models.DateTimeField('date de clôture', null=True, blank=True)
@@ -77,6 +78,9 @@ class DemandeAnalyse(models.Model):
         verbose_name = 'Demande d\'analyse'
         verbose_name_plural = 'Demandes d\'analyse'
         ordering = ['-date_inscription']
+        indexes = [
+            models.Index(fields=['laborantin', 'statut'], name='idx_demande_laborantin_statut'),
+        ]
 
     def __str__(self):
         return (

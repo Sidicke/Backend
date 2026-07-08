@@ -182,6 +182,16 @@ class UserMeSerializer(serializers.ModelSerializer):
             'date_joined', 'last_login', 'hopital',
         ]
 
+    def validate_telephone(self, value):
+        """Valide et formate le numéro de téléphone lors de la mise à jour du profil."""
+        from .utils import validate_and_format_benin_phone
+        formatted = validate_and_format_benin_phone(value)
+        if not formatted:
+            raise serializers.ValidationError(
+                "Le numéro de téléphone doit comporter 10 chiffres et commencer par '01'."
+            )
+        return formatted
+
     def update(self, instance, validated_data):
         # Mise à jour des profils imbriqués
         patient_data = validated_data.pop('patient_profile', None)

@@ -69,7 +69,8 @@ class RendezVous(models.Model):
     duree = models.PositiveIntegerField('durée (minutes)')
     motif = models.TextField('motif', blank=True, default='')
     statut = models.CharField(
-        'statut', max_length=20, choices=Statut.choices, default=Statut.EN_ATTENTE
+        'statut', max_length=20, choices=Statut.choices, default=Statut.EN_ATTENTE,
+        db_index=True,
     )
     commentaire_annulation = models.TextField(
         'motif d\'annulation/refus', blank=True, default=''
@@ -81,6 +82,10 @@ class RendezVous(models.Model):
         verbose_name = 'Rendez-vous'
         verbose_name_plural = 'Rendez-vous'
         ordering = ['-date_heure']
+        indexes = [
+            models.Index(fields=['medecin', 'statut', 'date_heure'], name='idx_rdv_medecin_statut_date'),
+            models.Index(fields=['patient', 'statut', 'date_heure'], name='idx_rdv_patient_statut_date'),
+        ]
 
     def __str__(self):
         return (
